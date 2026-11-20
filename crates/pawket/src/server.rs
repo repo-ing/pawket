@@ -530,6 +530,9 @@ fn client_tag(input: &DownloadInput) -> String {
     }
 }
 
+// The error is the HTTP response sent straight back to the client, so boxing
+// it would only add an allocation on the error path.
+#[allow(clippy::result_large_err)]
 async fn planned_selection(
     state: &AppState,
     input: &DownloadInput,
