@@ -1,0 +1,23 @@
+[package]
+name = "pawket-core"
+version = "0.3.0"
+edition = "2021"
+license = "MIT"
+description = "Bounded Rust media inspection and downloading for Pawket"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+tokio = { version = "1", features = ["fs", "io-util", "net", "time", "rt", "macros", "process"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
+url = "2"
+futures-util = "0.3"
+serde_json = "1"
+scraper = "0.24"
+tempfile = "3"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Pawket",
+  "version": "0.3.0",
+  "description": "Save videos, photos and audio from the page you’re on. Runs on your own computer.",
+  "icons": {
+    "16": "icons/repocat-16.png",
+    "32": "icons/repocat-32.png",
+    "48": "icons/repocat-48.png",
+    "128": "icons/repocat-128.png"
+  },
+  "minimum_chrome_version": "110",
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "downloads"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:3987/*",
+    "http://localhost:3987/*"
+  ],
+  "action": {
+    "default_title": "Save with Pawket",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/repocat-16.png",
+      "32": "icons/repocat-32.png",
+      "48": "icons/repocat-48.png"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; connect-src 'self' http://127.0.0.1:3987 http://localhost:3987;"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

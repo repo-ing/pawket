@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08090a">
+  <meta name="description" content="Paste a link and Pawket saves the video, photo or audio in it. It runs on your own computer.">
+  <meta name="pawket-token" content="__SESSION_TOKEN__"><meta name="pawket-surface" content="web">
+  <title>Pawket</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Ccircle cx=%2248%22 cy=%2248%22 r=%2247%22 fill=%22%234bf8be%22 stroke=%22none%22/%3E%3Cpath fill=%22%23000%22 stroke=%22none%22 d=%22M36.9 28.5L26.6 18.6Q24.2 15.9 22 18.6C19.6 24 17.6 31 16.6 37.5C15 40 12.9 44.5 12.9 50C12.9 58 17 65.4 25.4 72.8L22.4 80.2C28 85 38 87 48 87C58 87 68 85 73.6 80.2L70.6 72.8C79 65.4 83.1 58 83.1 50C83.1 44.5 81 40 79.4 37.5C78.4 31 76.4 24 74 18.6Q71.8 15.9 69.4 18.6L59.1 28.5Q48 29.6 36.9 28.5Z%22/%3E%3Cg fill=%22none%22 stroke=%22%23fff%22 stroke-width=%224.6%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M23.8 54.4A9 9 0 0 1 39.8 54.4%22/%3E%3Cpath d=%22M56.2 54.4A9 9 0 0 1 72.2 54.4%22/%3E%3C/g%3E%3Cpath fill=%22none%22 stroke=%22%23fff%22 stroke-width=%223%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 d=%22M42.4 60.4Q43.2 62.8 45.4 62.4Q47.2 62 48 60Q48.8 62 50.6 62.4Q52.8 62.8 53.6 60.4%22/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/bootstrap.js"></script>
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true" focusable="false"><symbol id="repocat" viewBox="0 0 96 96"><circle cx="48" cy="48" r="47" fill="#4bf8be" stroke="none"/><path fill="#000" stroke="none" d="M36.9 28.5L26.6 18.6Q24.2 15.9 22 18.6C19.6 24 17.6 31 16.6 37.5C15 40 12.9 44.5 12.9 50C12.9 58 17 65.4 25.4 72.8L22.4 80.2C28 85 38 87 48 87C58 87 68 85 73.6 80.2L70.6 72.8C79 65.4 83.1 58 83.1 50C83.1 44.5 81 40 79.4 37.5C78.4 31 76.4 24 74 18.6Q71.8 15.9 69.4 18.6L59.1 28.5Q48 29.6 36.9 28.5Z"/><g fill="none" stroke="#fff" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23.8 54.4A9 9 0 0 1 39.8 54.4"/><path d="M56.2 54.4A9 9 0 0 1 72.2 54.4"/></g><path fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M42.4 60.4Q43.2 62.8 45.4 62.4Q47.2 62 48 60Q48.8 62 50.6 62.4Q52.8 62.8 53.6 60.4"/></symbol></svg>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="Pawket by repo.ing, home">
+        <svg class="brand-mark" viewBox="0 0 96 96" aria-hidden="true" focusable="false"><use href="#repocat"/></svg>
+        <span>Pawket</span><span class="brand-by">by <span class="repoing-wordmark" role="img" aria-label="repo.ing"></span></span>
+      </a>
+      <nav aria-label="Main navigation"><a href="#surfaces">Product</a><a href="#chrome">Extension</a><a href="#agents">AI agents</a><a href="#support">What works</a></nav>
+      <button class="engine-button" id="connection-toggle" aria-expanded="false" aria-controls="connection-panel"><span class="status-dot"></span><span id="engine-badge">Checking…</span></button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="headline">
+      <a class="release-pill" href="#support"><span class="release-tag">New</span>Pick quality, MP3, WAV or FLAC</a>
+      <h1 id="headline">Paste a link. Keep the file.</h1>
+      <p class="lede">Drop in a link to a video, a song, a playlist or a post. Pawket finds the files and saves exactly what you pick.</p>
+
+      <div class="console" id="download" aria-label="Download media">
+        <div class="mascot" id="repo-cat" data-mood="idle" aria-hidden="true"><svg class="mascot-svg" viewBox="0 0 96 96" focusable="false"><g class="mascot-head"><path fill="#000" stroke="none" d="M36.9 28.5L26.6 18.6Q24.2 15.9 22 18.6C19.6 24 17.6 31 16.6 37.5C15 40 12.9 44.5 12.9 50C12.9 58 17 65.4 25.4 72.8L22.4 80.2C28 85 38 87 48 87C58 87 68 85 73.6 80.2L70.6 72.8C79 65.4 83.1 58 83.1 50C83.1 44.5 81 40 79.4 37.5C78.4 31 76.4 24 74 18.6Q71.8 15.9 69.4 18.6L59.1 28.5Q48 29.6 36.9 28.5Z"/><g fill="none" stroke="#fff" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round" class="mascot-eyes"><path d="M23.8 54.4A9 9 0 0 1 39.8 54.4"/><path d="M56.2 54.4A9 9 0 0 1 72.2 54.4"/></g><path class="mascot-mouth" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M42.4 60.4Q43.2 62.8 45.4 62.4Q47.2 62 48 60Q48.8 62 50.6 62.4Q52.8 62.8 53.6 60.4"/></g></svg></div>
+        <form id="inspect-form">
+          <label class="visually-hidden" for="url-input">Link to save</label>
+          <div class="input-shell">
+            <svg class="link-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 .1l3-3a5 5 0 0 0-7-7l-2 2m3 6a5 5 0 0 0-7-.1l-3 3a5 5 0 0 0 7 7l2-2"/></svg>
+            <input id="url-input" type="url" placeholder="Paste a link" autocomplete="off" spellcheck="false" required aria-describedby="supported-note">
+            <button id="paste-button" type="button" class="ghost-button" title="Paste link from clipboard">Paste</button>
+            <button id="inspect-button" class="primary-button" type="submit"><span data-button-label>Find media</span></button>
+          </div>
+        </form>
+        <div id="status" class="status-message" role="status" aria-live="polite"></div>
+        <section id="jobs" class="jobs" hidden aria-labelledby="jobs-title">
+          <div class="jobs-head"><h2 id="jobs-title">Downloads</h2><button id="clear-jobs" type="button" class="ghost-button">Clear finished</button></div>
+          <ul id="jobs-list" class="jobs-list" aria-live="polite"></ul>
+        </section>
+        <div id="results" class="results" hidden>
+          <h2 id="media-title"></h2>
+          <div id="formats" class="formats" role="radiogroup" aria-label="Available files"></div>
+          <div class="result-actions">
+            <p id="save-summary" class="save-summary" aria-live="polite" hidden></p>
+            <button id="save-all-button" class="secondary-button" type="button" hidden><span data-button-label>Save all files</span></button>
+            <button id="save-button" class="primary-button" type="button" hidden><span data-button-label>Save file</span></button>
+          </div>
+        </div>
+      </div>
+      <p id="supported-note" class="supported-note">Works with YouTube, TikTok, X, SoundCloud, Vimeo, playlists and most web pages. <a href="#support">See what works</a></p>
+    </section>
+
+    <section id="history" class="history" hidden aria-labelledby="history-title">
+      <div class="history-head"><h2 id="history-title">Recent</h2><button id="clear-history" type="button" class="ghost-button">Clear</button></div>
+      <ul id="history-list" class="history-list"></ul>
+    </section>
+
+    <section id="connection-panel" class="connection-panel" hidden aria-labelledby="connection-title">
+      <h2 id="connection-title">Connect the Chrome extension</h2>
+      <p>The extension needs a pairing code so it can talk to Pawket on this computer.</p>
+      <label for="pairing-token">Your pairing code</label>
+      <div class="pairing-row"><input id="pairing-token" type="password" readonly value="__SESSION_TOKEN__" autocomplete="off"><button id="copy-token" type="button" class="secondary-button">Copy code</button></div>
+      <p class="fine-print">Paste it into the extension, under Connection. You’ll get a new code each time Pawket restarts.</p>
+      <div class="advanced-connection"><label for="api-base">Engine address</label><input id="api-base" value="http://127.0.0.1:3987" type="url"><label for="api-token">Pairing code</label><input id="api-token" type="password" autocomplete="off"><button id="save-connection" type="button" class="secondary-button">Save connection</button></div>
+    </section>
+
+    <section class="surfaces" id="surfaces" aria-labelledby="surfaces-title">
+      <h2 id="surfaces-title">Use it wherever you are</h2>
+      <p class="section-lede">Here, in Chrome, in your terminal or with an AI agent. It’s the same Pawket in each place.</p>
+      <div class="surface-grid">
+        <article class="surface">
+          <div class="surface-demo demo-browser" aria-hidden="true"><span class="demo-tab"><span class="demo-dot"></span>x.com/nasa/status/…</span><span class="demo-button">Save file</span></div>
+          <h3>Browser</h3>
+          <p>Click the Pawket icon, or right-click anything and choose Save with Pawket.</p>
+          <a href="#chrome">Set up the extension</a>
+        </article>
+        <article class="surface">
+          <div class="surface-demo" aria-hidden="true"><code><span class="prompt">$</span> pawket get &lt;link&gt;</code></div>
+          <h3>Terminal</h3>
+          <p>One command saves the file. Handy for scripts.</p>
+          <a href="#support">See what works</a>
+        </article>
+        <article class="surface">
+          <div class="surface-demo" aria-hidden="true"><code>pawket_inspect<br>pawket_download</code></div>
+          <h3>AI agents</h3>
+          <p>Let your AI agent look up a link and save a file for you.</p>
+          <a href="#agents">Connect an agent</a>
+        </article>
+      </div>
+      <ul class="promises">
+        <li>Runs on your computer</li>
+        <li>No account, ads or tracking</li>
+        <li>Files are saved just as they were posted</li>
+      </ul>
+    </section>
+
+    <section class="help-section" aria-labelledby="setup-title">
+      <h2 id="setup-title">Good to know</h2>
+      <details id="chrome"><summary><span>Chrome extension</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="details-content"><ol><li>Open <code>chrome://extensions</code> and turn on Developer mode.</li><li>Choose <strong>Load unpacked</strong> and select Pawket’s <code>extension</code> folder.</li><li>Click the <strong>Ready</strong> button at the top right of this page and copy the pairing code.</li><li>Open the extension, open <strong>Connection</strong>, and paste the code.</li></ol><p>After that, right-click any link, video or image and choose <strong>Save with Pawket</strong>.</p><p class="fine-print">The extension comes with Pawket. It isn’t in the Chrome Web Store.</p></div></details>
+      <details id="agents"><summary><span>AI agents</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="details-content"><p>Add Pawket to any AI app that supports MCP. Point it at the Pawket program on your computer, like this:</p><pre><code>{
+  "mcpServers": {
+    "pawket": {
+      "command": "/absolute/path/to/pawket",
+      "args": ["mcp", "--output", "/your/downloads"]
+    }
+  }
+}</code></pre><p>Your agent can then look up a link and save one of the files it finds.</p></div></details>
+      <details id="support"><summary><span>What works</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="details-content"><p>Save public X videos, GIFs and photos, direct media links, and media exposed by ordinary web pages. Files have a 256 MiB limit.</p><p>Pick Video or Audio, then the quality. Video comes with or without sound, and “Plays everywhere” converts it to H.264 so any player opens it. Audio comes as the original track, MP3 (320, 192 or 128 kbps), WAV, FLAC or Opus. These choices need FFmpeg; with yt-dlp configured, YouTube, TikTok, SoundCloud, Vimeo, playlists and many more sites work too.</p></div></details>
+    </section>
+  </main>
+
+  <footer><div class="footer-inner"><a class="brand" href="/"><svg class="brand-mark" viewBox="0 0 96 96" aria-hidden="true" focusable="false"><use href="#repocat"/></svg><span>Pawket</span></a><a class="made-by" href="https://repo.ing" target="_blank" rel="noopener"><span>Runs on your computer. Made by</span><svg class="made-by-mark" viewBox="0 0 96 96" aria-hidden="true" focusable="false"><use href="#repocat"/></svg><span class="repoing-wordmark" role="img" aria-label="repo.ing"></span></a></div></footer>
+  <noscript><div class="noscript">This page needs JavaScript turned on to work.</div></noscript>
+</body>
+</html>

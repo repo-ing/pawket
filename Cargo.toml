@@ -1,0 +1,14 @@
+[workspace]
+members = ["crates/pawket-core", "crates/pawket", "crates/pawket-browser", "crates/xtask"]
+default-members = ["crates/pawket-core", "crates/pawket"]
+resolver = "2"
+
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+license = "MIT"
+
+[profile.release]
+lto = "thin"
+strip = "debuginfo"
+

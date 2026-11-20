@@ -1,0 +1,72 @@
+name: Pawket builds
+
+# Every push packages ZIPs as workflow artifacts. A pushed tag such as v0.3.0
+# also publishes them, with SHA256SUMS, as a GitHub Release for install.sh.
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Package ${{ matrix.platform }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x64
+            runner: ubuntu-22.04
+            binary: pawket
+          - platform: macos-arm64
+            runner: macos-15
+            binary: pawket
+          - platform: macos-x64
+            runner: macos-15-intel
+            binary: pawket
+          - platform: windows-x64
+            runner: windows-2022
+            binary: pawket.exe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build Pawket
+        run: cargo +stable build --release --locked -p pawket
+      - name: Package and test the ZIP
+        shell: bash
+        run: |
+          python scripts/release/package.py "${{ matrix.platform }}" "target/release/${{ matrix.binary }}" "dist/pawket-${{ matrix.platform }}.zip"
+          python scripts/release/smoke.py "dist/pawket-${{ matrix.platform }}.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pawket-${{ matrix.platform }}
+          path: dist/pawket-${{ matrix.platform }}.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum pawket-*.zip > SHA256SUMS && cat SHA256SUMS
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME" dist/pawket-*.zip dist/SHA256SUMS
+          --repo "$GITHUB_REPOSITORY" --title "Pawket $GITHUB_REF_NAME" --generate-notes

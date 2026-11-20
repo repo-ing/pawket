@@ -1,0 +1,7 @@
+/target/
+/downloads/
+/.local/
+*.part
+.env
+.DS_Store
+
