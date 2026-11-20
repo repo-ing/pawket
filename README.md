@@ -1,6 +1,8 @@
-# Pawket
+<p align="center"><img src="assets/brand/pawket-logo-320.png" alt="Pawket logo: a black cat peeking out of a pocket with a download arrow" width="150"></p>
 
-*by repo.ing*
+<h1 align="center">Pawket</h1>
+
+<p align="center"><em>by repo.ing</em></p>
 
 ![Pawket: paste a link, pick Video or Audio and the quality, save](docs/pawket-demo.gif)
 
