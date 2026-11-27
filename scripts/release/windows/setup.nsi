@@ -17,13 +17,13 @@ FunctionEnd
 
 Section
   SetOutPath "$INSTDIR"
-  File "${STAGE}/pawket.exe"
-  File "${STAGE}/Start Pawket.cmd"
-  File "${STAGE}/LICENSE"
+  File "${STAGE}\pawket.exe"
+  File "${STAGE}\Start Pawket.cmd"
+  File "${STAGE}\LICENSE"
   SetOutPath "$INSTDIR\media-tools"
-  File "${STAGE}/tools/*.exe"
+  File "${STAGE}\tools\*.exe"
   SetOutPath "$INSTDIR\licenses"
-  File "${STAGE}/licenses/*"
+  File "${STAGE}\licenses\*"
   SetOutPath "$INSTDIR"
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   CreateShortcut "$SMPROGRAMS\Pawket.lnk" "$INSTDIR\Start Pawket.cmd" "" "$INSTDIR\pawket.exe"
