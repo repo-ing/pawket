@@ -44,13 +44,14 @@ jobs:
           python scripts/release/package.py "${{ matrix.platform }}" "target/release/${{ matrix.binary }}" "dist/pawket-${{ matrix.platform }}.zip"
           python scripts/release/smoke.py "dist/pawket-${{ matrix.platform }}.zip"
       - name: Bundle the Apple silicon app for release
-        if: matrix.platform == 'macos-arm64' && startsWith(github.ref, 'refs/tags/v')
+        if: matrix.platform == 'macos-arm64' && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
         shell: bash
         run: |
           archive=dist/pawket-macos-arm64.zip
-          python scripts/release/mac-app/build.py "$archive" dist/Pawket-for-Mac.zip --sha256 "$(shasum -a 256 "$archive" | cut -d ' ' -f 1)" --version "${GITHUB_REF_NAME#v}"
+          version=$(python -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["workspace"]["package"]["version"])')
+          python scripts/release/mac-app/build.py "$archive" dist/Pawket-for-Mac.zip --sha256 "$(shasum -a 256 "$archive" | cut -d ' ' -f 1)" --version "$version"
       - name: Bundle Windows installer for release
-        if: matrix.platform == 'windows-x64' && startsWith(github.ref, 'refs/tags/v')
+        if: matrix.platform == 'windows-x64' && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
         shell: pwsh
         run: |
           if (!(Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
