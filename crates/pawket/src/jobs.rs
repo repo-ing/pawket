@@ -147,6 +147,15 @@ impl JobStore {
         });
     }
 
+    pub fn finish_local(&self, id: &str, filename: &str) {
+        self.update(id, |job| {
+            job.status = JobStatus::Done;
+            job.filename = Some(filename.to_owned());
+            job.delivered = true;
+            job.finished = Some(Instant::now());
+        });
+    }
+
     pub fn fail(&self, id: &str, code: &str, message: &str) {
         self.update(id, |job| {
             job.status = JobStatus::Failed;

@@ -26,7 +26,6 @@ use tokio::io::AsyncWriteExt;
 use url::Url;
 
 pub const MAX_HTML_BYTES: u64 = 2 * 1024 * 1024;
-pub const MAX_MEDIA_BYTES: u64 = 256 * 1024 * 1024;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -367,11 +366,6 @@ impl Engine {
         let mime = normalized_mime(&response);
         let length = response.content_length();
         if let Some(format) = parse::direct_format(&final_url, &mime, length) {
-            if length.is_some_and(|n| n > MAX_MEDIA_BYTES) {
-                return Err(PawketError::TooLarge {
-                    limit: MAX_MEDIA_BYTES,
-                });
-            }
             return Ok(MediaInfo {
                 source_url: final_url.to_string(),
                 title: parse::title_from_url(&final_url),
@@ -539,22 +533,12 @@ async fn download_source(
     progress: &Progress,
     already_written: u64,
 ) -> Result<(tempfile::TempPath, u64)> {
-    let limit = MAX_MEDIA_BYTES - already_written;
-    let too_large = || PawketError::TooLarge {
-        limit: MAX_MEDIA_BYTES,
-    };
-    if response.content_length().is_some_and(|bytes| bytes > limit) {
-        return Err(too_large());
-    }
     let (mut file, path) = storage::create_temporary(directory).await?;
     let mut written: u64 = 0;
     let mut stream = response.bytes_stream();
     while let Some(next) = stream.next().await {
         let chunk = next?;
         written = written.saturating_add(chunk.len() as u64);
-        if written > limit {
-            return Err(too_large());
-        }
         file.write_all(&chunk).await?;
         progress.set_written(already_written + written);
     }

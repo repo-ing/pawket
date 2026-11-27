@@ -119,7 +119,7 @@ Requires `X-Pawket-Token`. Empties the history and returns `{"entries":[]}`.
 
 ## GET /v1/files/{id}?ticket=...
 
-Retrieves a prepared file as `application/octet-stream` with an attachment filename. The ticket is a bearer capability. Keep it local and do not include it in analytics or shared logs. Links are session-scoped and expire after 30 minutes or when transfer copies are pruned or the process exits. Retention is capped at 20 files and 512 MiB. Graceful shutdown removes only the server’s own temporary session directory.
+Retrieves a prepared file as `application/octet-stream` with an attachment filename. The ticket is a bearer capability. Keep it local and do not include it in analytics or shared logs. Links are session-scoped and expire after 30 minutes or when transfer copies are pruned or the process exits. Retention is capped at 20 files. Graceful shutdown removes only the server’s own temporary session directory.
 
 ## Errors
 

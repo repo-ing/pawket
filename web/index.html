@@ -40,6 +40,12 @@
             <button id="inspect-button" class="primary-button" type="submit"><span data-button-label>Find media</span></button>
           </div>
         </form>
+        <div class="save-folder">
+          <span>Save to <strong id="folder-name">Pawket</strong></span>
+          <button class="ghost-button" type="button" id="choose-folder">Choose folder…</button>
+          <button class="ghost-button" type="button" id="open-folder">Open folder</button>
+          <span id="folder-status" role="status"></span>
+        </div>
         <div id="status" class="status-message" role="status" aria-live="polite"></div>
         <section id="jobs" class="jobs" hidden aria-labelledby="jobs-title">
           <div class="jobs-head"><h2 id="jobs-title">Downloads</h2><button id="clear-jobs" type="button" class="ghost-button">Clear finished</button></div>
@@ -113,7 +119,7 @@
     }
   }
 }</code></pre><p>Your agent can then look up a link and save one of the files it finds.</p></div></details>
-      <details id="support"><summary><span>What works</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="details-content"><p>Save public X videos, GIFs and photos, direct media links, and media exposed by ordinary web pages. Files have a 256 MiB limit.</p><p>Pick Video or Audio, then the quality. Video comes with or without sound, and “Plays everywhere” converts it to H.264 so any player opens it. Audio comes as the original track, MP3 (320, 192 or 128 kbps), WAV, FLAC or Opus. These choices need FFmpeg; with yt-dlp configured, YouTube, TikTok, SoundCloud, Vimeo, playlists and many more sites work too.</p></div></details>
+      <details id="support"><summary><span>What works</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div class="details-content"><p>Save public X videos, GIFs and photos, direct media links, and media exposed by ordinary web pages.</p><p>Pick Video or Audio, then the quality. Video comes with or without sound, and “Plays everywhere” converts it to H.264 so any player opens it. Audio comes as the original track, MP3 (320, 192 or 128 kbps), WAV, FLAC or Opus. These choices need FFmpeg; with yt-dlp configured, YouTube, TikTok, SoundCloud, Vimeo, playlists and many more sites work too.</p></div></details>
     </section>
   </main>
 

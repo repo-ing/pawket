@@ -1,3 +1,4 @@
+mod folder;
 mod history;
 mod jobs;
 mod mcp;

@@ -1,6 +1,4 @@
-use crate::{
-    storage, Conversion, MediaFormat, MediaInfo, MediaKind, PawketError, Result, MAX_MEDIA_BYTES,
-};
+use crate::{storage, Conversion, MediaFormat, MediaInfo, MediaKind, PawketError, Result};
 use std::{
     path::{Path, PathBuf},
     process::Stdio,
@@ -302,8 +300,6 @@ pub(crate) async fn run(
         command.args(encode_args(conversion, kbps));
     }
     command
-        .arg("-fs")
-        .arg(MAX_MEDIA_BYTES.to_string())
         .args(["-f", conversion.extension(), "-fd", "1", "fd:"])
         .stdin(Stdio::from(input))
         .stdout(Stdio::from(output))
@@ -319,11 +315,6 @@ pub(crate) async fn run(
         .open(&path)
         .await?;
     let bytes = output.metadata().await?.len();
-    if bytes >= MAX_MEDIA_BYTES {
-        return Err(PawketError::TooLarge {
-            limit: MAX_MEDIA_BYTES,
-        });
-    }
     if !status.success() || bytes == 0 {
         return Err(PawketError::ConversionFailed);
     }

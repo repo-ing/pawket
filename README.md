@@ -2,7 +2,7 @@
 
 # Pawket
 
-Save a video as **MP4** or just the audio as **MP3**. Paste a link, pick what you want, and the file lands in your browser’s Downloads. Pawket runs on your computer and needs no Pawket account.
+Save a video as **MP4** or just the audio as **MP3**. Paste a link, pick what you want, and save the file to your computer. Pawket runs on your computer and needs no Pawket account.
 
 [Official Pawket website and installation guide](https://repo-ing.github.io/pawket/)
 
@@ -26,7 +26,7 @@ The Windows installer and Apple silicon Mac app include the media tools. Pawket 
 
 ## Common questions
 
-**Where did my file go?** Open your browser’s Downloads list. If your browser asks where to save files, check the folder you picked.
+**Where did my file go?** In Pawket, click **Open folder**. Files go to **Downloads/Pawket** by default. Click **Choose folder** once to change it. Choose a folder your cloud drive already syncs to see your saves on your other devices.
 
 **Why did my computer show a security prompt?** These builds are unsigned on Windows and not notarized on Mac. Check that your download came from this repository’s [official releases](https://github.com/repo-ing/pawket/releases). On a Mac, see [Apple’s first-launch instructions](https://support.apple.com/en-us/102445).
 

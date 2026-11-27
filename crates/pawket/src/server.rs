@@ -40,13 +40,13 @@ const BROWSER_WASM: &[u8] = include_bytes!("../../../web/pkg/pawket_browser_bg.w
 const FILE_TTL: Duration = Duration::from_secs(30 * 60);
 const PLAN_TTL: Duration = Duration::from_secs(10 * 60);
 const MAX_FILES: usize = 20;
-const MAX_RETAINED_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_PLANS: usize = 64;
 /// Queued plus running background downloads allowed at once.
 const MAX_ACTIVE_JOBS: usize = 12;
 
 #[derive(Clone)]
 struct AppState {
+    folder: crate::folder::Folder,
     engine: Arc<Engine>,
     token: String,
     // Only this freshly-created session directory is ever recursively removed.
@@ -67,6 +67,7 @@ impl AppState {
             .prefix("pawket-session-")
             .tempdir_in(output)?;
         Ok(Self {
+            folder: crate::folder::Folder::new(output),
             engine: Arc::new(engine),
             token: Uuid::new_v4().simple().to_string() + &Uuid::new_v4().simple().to_string(),
             session: Arc::new(session),
@@ -138,11 +139,11 @@ pub fn capabilities(engine: &Engine) -> Value {
         "surfaces": ["web", "chrome_wasm", "cli", "mcp_stdio", "http_api"],
         "transcoding": can_convert,
         "conversion_outputs": if can_convert { &["mp3", "mp4"][..] } else { &[][..] },
-        "max_media_bytes": pawket_core::MAX_MEDIA_BYTES,
+        "max_media_bytes": null,
         "inspection_ttl_seconds": PLAN_TTL.as_secs(),
         "file_ttl_seconds": FILE_TTL.as_secs(),
         "max_retained_files": MAX_FILES,
-        "max_retained_bytes": MAX_RETAINED_BYTES,
+        "max_retained_bytes": null,
         "notes": notes
     })
 }
@@ -239,6 +240,7 @@ fn build_router(state: AppState, assets: Option<&FilePath>) -> Router {
         .route("/v1/capabilities", get(|State(state): State<AppState>| async move {
                 Json(capabilities(&state.engine))
         }))
+        .route("/v1/folder/{action}", post(folder_action))
         .route("/v1/inspect", post(inspect))
         .route("/v1/download", post(download))
         .route("/v1/jobs", get(list_jobs).post(start_job))
@@ -252,6 +254,24 @@ fn build_router(state: AppState, assets: Option<&FilePath>) -> Router {
         .layer(DefaultBodyLimit::max(8192))
         .layer(middleware::from_fn_with_state(state.clone(), guard))
         .with_state(state)
+}
+
+async fn folder_action(State(state): State<AppState>, Path(action): Path<String>) -> Response {
+    match tokio::task::spawn_blocking(move || -> std::io::Result<PathBuf> {
+        match action.as_str() {
+            "choose" => state.folder.choose()?,
+            "open" => state.folder.open()?,
+            "status" => (),
+            _ => return Err(std::io::Error::other("Unknown folder action")),
+        }
+        state.folder.path()
+    })
+    .await
+    {
+        Ok(Ok(path)) => Json(json!({"path":path})).into_response(),
+        Ok(Err(e)) => api_error(StatusCode::BAD_REQUEST, "folder_error", e),
+        Err(e) => api_error(StatusCode::INTERNAL_SERVER_ERROR, "folder_error", e),
+    }
 }
 
 fn api_error(status: StatusCode, code: &str, message: impl ToString) -> Response {
@@ -509,6 +529,8 @@ struct DownloadInput {
     format_id: Option<String>,
     /// Which surface is asking; background jobs are grouped by it.
     client: Option<String>,
+    #[serde(default)]
+    save_to_folder: bool,
 }
 
 const MAX_CLIENT_CHARS: usize = 24;
@@ -700,6 +722,14 @@ async fn start_job(
         Err(response) => return response,
     };
     let id = Uuid::new_v4().simple().to_string();
+    let destination = if input.save_to_folder {
+        match state.folder.destination() {
+            Ok(path) => Some(path),
+            Err(e) => return api_error(StatusCode::BAD_REQUEST, "folder_error", e),
+        }
+    } else {
+        None
+    };
     let progress = state.jobs.add(
         &id,
         &info.title,
@@ -718,7 +748,25 @@ async fn start_job(
             };
             state.jobs.start(&id);
             match perform_download(&state, &id, &info, &format, &progress).await {
-                Ok((result, url)) => state.jobs.finish(&id, &result.filename, &url),
+                Ok((result, url)) => {
+                    let Some(folder) = destination else {
+                        state.jobs.finish(&id, &result.filename, &url);
+                        return;
+                    };
+                    match tokio::task::spawn_blocking(move || {
+                        crate::folder::keep(FilePath::new(&result.path), &folder, &result.filename)
+                    })
+                    .await
+                    {
+                        Ok(Ok(name)) => state.jobs.finish_local(&id, &name),
+                        Ok(Err(e)) => state.jobs.fail(
+                            &id,
+                            "folder_error",
+                            &format!("Could not save to Pawket: {e}"),
+                        ),
+                        Err(e) => state.jobs.fail(&id, "folder_error", &e.to_string()),
+                    }
+                }
                 Err(error) => state.jobs.fail(&id, error.code(), &error.to_string()),
             }
         }
@@ -776,8 +824,7 @@ async fn prune_files(state: &AppState) {
         for id in &removed {
             files.remove(id);
         }
-        let mut total: u64 = files.values().map(|file| file.bytes).sum();
-        while files.len() > MAX_FILES || total > MAX_RETAINED_BYTES {
+        while files.len() > MAX_FILES {
             let Some(oldest) = files
                 .iter()
                 .min_by_key(|(_, saved)| saved.created)
@@ -785,9 +832,7 @@ async fn prune_files(state: &AppState) {
             else {
                 break;
             };
-            if let Some(saved) = files.remove(&oldest) {
-                total = total.saturating_sub(saved.bytes);
-            }
+            files.remove(&oldest);
             removed.push(oldest);
         }
         removed
@@ -1198,7 +1243,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn retention_evicts_oldest_and_bounds_total_bytes() {
+    async fn retention_evicts_oldest_and_keeps_large_files() {
         let (_directory, state, _router) = fixture().await;
         let now = Instant::now();
         for index in 0..=MAX_FILES {
@@ -1214,32 +1259,9 @@ mod tests {
         assert_eq!(state.files.lock().await.len(), MAX_FILES);
         assert!(!state.files.lock().await.contains_key("file-0"));
         assert!(!state.session.path().join("file-0").exists());
-        add_saved(
-            &state,
-            "large-a",
-            pawket_core::MAX_MEDIA_BYTES,
-            Instant::now(),
-        )
-        .await;
-        add_saved(
-            &state,
-            "large-b",
-            pawket_core::MAX_MEDIA_BYTES,
-            Instant::now(),
-        )
-        .await;
-        add_saved(
-            &state,
-            "large-c",
-            pawket_core::MAX_MEDIA_BYTES,
-            Instant::now(),
-        )
-        .await;
+        add_saved(&state, "large", 1024 * 1024 * 1024, Instant::now()).await;
         prune_files(&state).await;
-        let files = state.files.lock().await;
-        assert!(files.values().map(|file| file.bytes).sum::<u64>() <= MAX_RETAINED_BYTES);
-        assert!(files.contains_key("large-c"));
-        assert!(!files.contains_key("large-a"));
+        assert!(state.files.lock().await.contains_key("large"));
     }
 
     #[tokio::test]
@@ -1270,6 +1292,7 @@ mod tests {
             url: url.into(),
             format_id: Some(first.formats[0].id.clone()),
             client: None,
+            save_to_folder: false,
         };
         let (_, selected) = planned_selection(&state, &first_input).await.unwrap();
         assert_eq!(selected.url, "https://example.com/first.mp4");
@@ -1277,6 +1300,7 @@ mod tests {
             url: "https://example.com/other".into(),
             format_id: first_input.format_id,
             client: None,
+            save_to_folder: false,
         };
         assert_eq!(
             error_code(planned_selection(&state, &wrong_url).await.unwrap_err()).await,
@@ -1297,6 +1321,7 @@ mod tests {
             url: url.into(),
             format_id: Some(response.formats[0].id.clone()),
             client: None,
+            save_to_folder: false,
         };
         let error = planned_selection(&state, &input).await.unwrap_err();
         assert_eq!(error.status(), StatusCode::CONFLICT);

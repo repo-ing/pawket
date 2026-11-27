@@ -308,11 +308,6 @@ pub(crate) fn error_from(stderr: &str, has_cookies: bool) -> PawketError {
     if has(&["unsupported url"]) {
         return PawketError::Unsupported;
     }
-    if has(&["larger than max-filesize", "max-filesize"]) {
-        return PawketError::TooLarge {
-            limit: crate::MAX_MEDIA_BYTES,
-        };
-    }
     if has(&["http error 429", "too many requests", "not a bot"]) {
         return PawketError::RateLimited;
     }
@@ -542,7 +537,6 @@ mod tests {
             ("ERROR: [dailymotion] x8j2s4e: Not found.", "http_error"),
             ("ERROR: [Reddit] 6rrwyj: Account authentication is required. Use --cookies-from-browser", "source_unavailable"),
             ("ERROR: [youtube] x: Sign in to confirm you’re not a bot", "rate_limited"),
-            ("ERROR: [x] 1: File is larger than max-filesize (300 > 268435456)", "too_large"),
         ];
         for (stderr, code) in cases {
             assert_eq!(error_from(stderr, false).code(), code, "{stderr}");

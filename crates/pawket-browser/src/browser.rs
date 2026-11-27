@@ -557,6 +557,7 @@ async fn start_jobs(state: Shared, source: String, format_ids: Vec<String>) {
             "url": source,
             "format_id": format_id,
             "client": surface.client_tag(),
+            "save_to_folder": surface == Surface::Web,
         });
         match request_json(&connection, "/v1/jobs", Some(body), 60_000).await {
             Ok(_) => started += 1,
@@ -614,7 +615,14 @@ fn show_media(state: &Shared) -> Result<(), JsValue> {
     hidden("results", false);
     hidden("save-button", false);
     hidden("save-all-button", true);
-    set_button_text("save-button", &save.label);
+    set_button_text(
+        "save-button",
+        if state.borrow().surface == Surface::Web && save.label == "Save" {
+            "Save to Pawket"
+        } else {
+            &save.label
+        },
+    );
     if let Ok(summary) = element("save-summary") {
         summary.set_text_content(Some(&save.summary));
     }
@@ -689,7 +697,7 @@ fn render_formats(state: &Shared, media: &MediaInfo) -> Result<(), JsValue> {
                 }
                 state.borrow_mut().selected = Some(id.clone());
                 hidden("save-button", false);
-                status("Press Save file when you’re ready.", "idle");
+                status("Ready to save.", "idle");
             }
         });
         radio.add_event_listener_with_callback("change", listener.as_ref().unchecked_ref())?;
@@ -700,7 +708,14 @@ fn render_formats(state: &Shared, media: &MediaInfo) -> Result<(), JsValue> {
     }
     hidden("results", false);
     hidden("save-button", false);
-    set_button_text("save-button", "Save file");
+    set_button_text(
+        "save-button",
+        if state.borrow().surface == Surface::Web {
+            "Save to Pawket"
+        } else {
+            "Save file"
+        },
+    );
     let items = first_format_per_item(media).len();
     if items >= MIN_ITEMS_FOR_SAVE_ALL {
         set_button_text("save-all-button", &format!("Save all {items} files"));
@@ -886,6 +901,10 @@ fn job_detail(job: &Job) -> String {
             ),
             None => format!("{} so far", human_bytes(job.bytes_done)),
         },
+        "done" if job.delivered && job.url.is_none() => format!(
+            "Saved to Pawket · {}",
+            job.filename.as_deref().unwrap_or("File")
+        ),
         "done" => format!("Saved · {}", human_bytes(job.bytes_done)),
         _ => job
             .error
@@ -1257,7 +1276,14 @@ fn finish_request(state: &Shared, revision: u64) -> bool {
     let mut state = state.borrow_mut();
     state.busy = false;
     busy(false, "Find media");
-    set_button_text("save-button", "Save file");
+    set_button_text(
+        "save-button",
+        if state.surface == Surface::Web {
+            "Save to Pawket"
+        } else {
+            "Save file"
+        },
+    );
     state.request_revision == revision
 }
 

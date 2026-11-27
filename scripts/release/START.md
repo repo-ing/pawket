@@ -7,7 +7,7 @@ Extract the entire ZIP, then open the Pawket folder.
 - **Linux:** run **./start-pawket.sh** from a terminal.
 
 Pawket opens in your browser at <http://127.0.0.1:3987/>. Paste a link, press
-**Find media**, pick Video or Audio and the quality, then **Save**. Keep the
+**Find media**, pick Video or Audio and the quality, then **Save to Pawket**. Click **Open folder** to find the file. Use **Choose folder** to change where future saves go. Keep the
 terminal window open while you use it, and press Ctrl+C there to stop it.
 
 ## More sites and formats

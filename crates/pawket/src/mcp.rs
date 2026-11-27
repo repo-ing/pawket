@@ -72,7 +72,7 @@ impl PawketMcp {
 
     #[tool(
         name = "pawket_download",
-        description = "Save media to this server's configured output directory. Use a format_id from pawket_inspect, or omit it to save the first original. Conversion requires selecting a returned MP3 or MP4 conversion ID. Never overwrites existing files. Returns the saved path and byte count. Maximum file size is 256 MiB.",
+        description = "Save media to this server's configured output directory. Use a format_id from pawket_inspect, or omit it to save the first original. Conversion requires selecting a returned MP3 or MP4 conversion ID. Never overwrites existing files. Returns the saved path and byte count.",
         annotations(
             title = "Download media",
             read_only_hint = false,

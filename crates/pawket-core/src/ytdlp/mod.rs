@@ -2,9 +2,7 @@
 //!
 //! Pawket runs a local yt-dlp executable the operator configured. Every
 //! connection yt-dlp makes goes through a loopback proxy that applies the
-//! same public-HTTPS rules as native downloads (see `proxy`). Output is
-//! bounded by `MAX_MEDIA_BYTES`, and files are committed through Pawket's
-//! no-overwrite storage.
+//! same public-HTTPS rules as native downloads (see `proxy`). Files are committed through Pawket’s no-overwrite storage.
 
 mod cookies;
 mod offer;
@@ -20,7 +18,7 @@ pub(crate) use parse::{MAX_ENTRIES, PROVIDER};
 
 use crate::{
     convert, network, storage, DownloadResult, MediaFormat, MediaInfo, PawketError, Progress,
-    Result, MAX_MEDIA_BYTES,
+    Result,
 };
 use process::{read_capped, Run};
 use proxy::GuardProxy;
@@ -46,8 +44,6 @@ const MAX_STDERR_BYTES: usize = 64 * 1024;
 const OUTPUT_TEMPLATE: &str = "%(title).120B.%(ext)s";
 const PROGRESS_TEMPLATE: &str = "download:PAWKET %(progress.downloaded_bytes)s \
      %(progress.total_bytes)s %(progress.total_bytes_estimate)s";
-/// The line yt-dlp prints when it skips a file over `--max-filesize`.
-const SKIPPED_FOR_SIZE: &str = "[download] File is larger than max-filesize";
 /// Partial-file suffixes yt-dlp leaves while it works.
 const PARTIAL_SUFFIXES: [&str; 4] = [".part", ".ytdl", ".temp", ".frag"];
 /// Variables that change which Python code yt-dlp loads.
@@ -258,8 +254,6 @@ pub(crate) async fn download(
             "--playlist-items",
             "1",
         ])
-        .arg("--max-filesize")
-        .arg(MAX_MEDIA_BYTES.to_string())
         // -P takes a plain path; only the -o template is expanded.
         .arg("-P")
         .arg(work.path())
@@ -273,7 +267,7 @@ pub(crate) async fn download(
     let mut run = Run::spawn(command)?;
     let (stdout, stderr) = (run.stdout()?, run.stderr()?);
     let errors = tokio::spawn(read_capped(stderr, MAX_STDERR_BYTES));
-    let skipped_for_size = timeout(DOWNLOAD_TIMEOUT, watch_progress(stdout, progress))
+    timeout(DOWNLOAD_TIMEOUT, watch_progress(stdout, progress))
         .await
         .map_err(|_| PawketError::Network("The download took too long".into()))??;
     // Any error above drops `run`, which stops yt-dlp and its FFmpeg.
@@ -282,10 +276,7 @@ pub(crate) async fn download(
     if !status.success() {
         return Err(backend.error_from(&errors));
     }
-    let (file, bytes) = match finished_file(work.path()).await {
-        Err(_) if skipped_for_size => return Err(too_large()),
-        other => other?,
-    };
+    let (file, bytes) = finished_file(work.path()).await?;
     let title = if select::is_item(&format.id) {
         file.file_stem()
             .and_then(|stem| stem.to_str())
@@ -334,31 +325,19 @@ pub(crate) async fn download(
     })
 }
 
-/// Follow yt-dlp's progress lines, stopping once the run passes the limit.
-/// Returns true when yt-dlp skipped a file for being over the size limit.
-async fn watch_progress(stdout: tokio::process::ChildStdout, progress: &Progress) -> Result<bool> {
+/// Follow yt-dlp's progress lines.
+async fn watch_progress(stdout: tokio::process::ChildStdout, progress: &Progress) -> Result<()> {
     let mut lines = BufReader::new(stdout).lines();
     let mut tally = Tally::default();
-    let mut skipped_for_size = false;
     while let Some(line) = lines.next_line().await? {
-        skipped_for_size |= line.starts_with(SKIPPED_FOR_SIZE);
         let Some((downloaded, total)) = parse::progress_line(&line) else {
             continue;
         };
         let written = tally.update(downloaded);
-        if written > MAX_MEDIA_BYTES || total.is_some_and(|t| t > MAX_MEDIA_BYTES) {
-            return Err(too_large());
-        }
         progress.set_written(written);
         progress.set_total(if tally.finished == 0 { total } else { None });
     }
-    Ok(skipped_for_size)
-}
-
-fn too_large() -> PawketError {
-    PawketError::TooLarge {
-        limit: MAX_MEDIA_BYTES,
-    }
+    Ok(())
 }
 
 /// The one finished file yt-dlp left in its work directory.
@@ -379,9 +358,6 @@ async fn finished_file(work: &Path) -> Result<(PathBuf, u64)> {
     let (path, bytes) = best.ok_or_else(|| {
         PawketError::SourceUnavailable("yt-dlp finished without saving a file.".into())
     })?;
-    if bytes > MAX_MEDIA_BYTES {
-        return Err(too_large());
-    }
     if bytes == 0 {
         return Err(PawketError::NotMedia);
     }

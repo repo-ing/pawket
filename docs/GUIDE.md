@@ -38,7 +38,7 @@ Deno lets yt-dlp handle YouTube's player checks. Releases are not code-signed ye
 | Public Instagram Reels | No | Available public posts can download directly. Some posts require login. |
 | Reddit, private or members-only videos | No | May require your browser's login (`--cookies-from-browser`) |
 | DRM-protected video, live streams | No | No |
-| Files over 256 MiB | No | No (size cap) |
+| Files over 256 MiB | Yes | Yes |
 
 ### How X works
 
@@ -49,7 +49,7 @@ The X adapter (`crates/pawket-core/src/x/`) reads the post through X's public em
 - **Recent.** The website lists your last downloads. Click one to look the link up again. **Clear** empties the list. The list lives in `history.json` in the engine's transfer folder and stores titles and links only.
 - **Several files at once.** When an X post has several photos or videos, or a link is a playlist, Pawket shows a checklist. Tick what you want and Save applies your chosen format to each.
 - **Right-click.** With the extension installed, right-click any page, link, video or image and choose **Save with Pawket**. A small Pawket window opens with the link already looked up.
-- **Background downloads with progress.** **Save file** hands the download to the engine and shows a progress bar under the link bar. You can look up another link, or close the page or popup, while it runs. When it finishes, the file goes to your browser's Downloads. If the window was closed, that happens the next time you open it. Up to three downloads run at once; the rest wait their turn.
+- **Background downloads with progress.** **Save file** hands the download to the engine and shows a progress bar under the link bar. You can look up another link, or close the page or popup, while it runs. Desktop saves go to your Pawket folder even if you close the page and leave the engine running. The Chrome extension uses browser Downloads. Up to three downloads run at once; the rest wait their turn.
 
 ## Releases
 
@@ -94,7 +94,7 @@ Set `PAWKET_FFMPEG` to the path of a local FFmpeg executable, or pass `--ffmpeg 
 
 The website shows a simple picker: **Video** or **Audio**, then the quality. Video comes with or without **Sound**, and **Plays everywhere** converts it to H.264/AAC MP4 when the original isn't already. Audio comes as the original track, **MP3** at 320, 192 or 128 kbps, **WAV**, **FLAC** or **Opus**. Every format also carries a `choice` object (`mode`, `height`, `sound`, `compatible`, `audio`, `kbps`) so other clients can build the same picker.
 
-For direct files and X posts the CLI and MCP IDs are `original-as-mp3` (192 kbps), `original-as-mp3-320`, `original-as-mp3-128`, `original-as-wav`, `original-as-flac`, `original-as-opus`, `original-muted` and `original-as-mp4`. When a source has unknown audio status, audio conversions can fail if the file has no audio track. FFmpeg receives local, already downloaded file descriptors. Both input and output are bounded to 256 MiB.
+For direct files and X posts the CLI and MCP IDs are `original-as-mp3` (192 kbps), `original-as-mp3-320`, `original-as-mp3-128`, `original-as-wav`, `original-as-flac`, `original-as-opus`, `original-muted` and `original-as-mp4`. When a source has unknown audio status, audio conversions can fail if the file has no audio track. FFmpeg receives local, already downloaded file descriptors.
 
 ### YouTube preview
 
@@ -111,7 +111,7 @@ pawket serve --ffmpeg /opt/homebrew/bin/ffmpeg --yt-dlp /opt/homebrew/bin/yt-dlp
 - **Choices:** every video quality comes with sound, without sound (`-mute`) and, where the site has no H.264 at that height, re-encoded so it plays everywhere (`-h264`, slower). Audio comes as the original track (`ytdlp-audio-<ext>`), MP3 at 320/192/128 kbps (`ytdlp-mp3-320`, `ytdlp-mp3`, `ytdlp-mp3-128`), `ytdlp-wav`, `ytdlp-flac` and `ytdlp-opus` (when FFmpeg has libopus). Pawket's own FFmpeg step does every conversion. Direct files and X posts get the same audio choices plus `-muted`.
 - **Playlists and channels** list their first 50 entries as numbered items with the same video and audio choices. The web page shows them as a checklist; Save applies the chosen format to every ticked entry.
 - **Order:** X posts use the built-in adapter first (yt-dlp only if that fails). Other links go to yt-dlp first. When only yt-dlp's generic page scan matches, Pawket's own direct-file and HTML result is used if it finds anything, which keeps exact bytes.
-- **Same limits:** every connection yt-dlp makes (redirects, embedded players, stream segments) goes through a loopback proxy inside Pawket that only allows HTTPS on port 443 to public addresses, resolved and pinned per connection. yt-dlp is limited to its native downloaders so no external tool fetches around the proxy. Files are capped at 256 MiB and nothing is overwritten. yt-dlp runs with `--ignore-config --no-plugin-dirs` and without `PYTHON*` variables, so local config can't add cookies, `--exec`, plugins or output paths (this needs a yt-dlp recent enough to have `--no-plugin-dirs`). Stopping a download stops yt-dlp and any FFmpeg it started.
+- **Same limits:** every connection yt-dlp makes (redirects, embedded players, stream segments) goes through a loopback proxy inside Pawket that only allows HTTPS on port 443 to public addresses, resolved and pinned per connection. yt-dlp is limited to its native downloaders so no external tool fetches around the proxy. Existing files are preserved. yt-dlp runs with `--ignore-config --no-plugin-dirs` and without `PYTHON*` variables, so local config can't add cookies, `--exec`, plugins or output paths (this needs a yt-dlp recent enough to have `--no-plugin-dirs`). Stopping a download stops yt-dlp and any FFmpeg it started.
 - **Signed-in media:** add `--cookies-from-browser chrome` (or `firefox`, `safari`, `brave`, `edge`, `chromium`, `opera`, `vivaldi`, `whale`, optionally `:PROFILE`) to use that browser's logins, or `--cookies cookies.txt` for a Netscape-format cookies file. This covers private and members-only videos, age-restricted videos, and sites that block logged-out visitors, such as Reddit and Instagram. On macOS, Chromium browsers ask for Keychain access the first time; Safari needs Full Disk Access for the app running Pawket. Your logins then apply to every link Pawket opens, so only paste links you trust.
 - **Vimeo without a login:** Vimeo links go through Vimeo's public embeddable player (`player.vimeo.com`), which still serves logged-out visitors. Videos Vimeo encrypts for that player are refused as DRM.
 - **Not supported:** DRM and live streams.
@@ -190,7 +190,7 @@ The Rust `xtask` builds `pawket-browser`, generates its browser bindings, and co
 - HTTPS only, port 443. Credentials embedded in input URLs are rejected.
 - Public destinations only. Local, private, link-local, reserved IP ranges and local hostname suffixes are rejected. yt-dlp's connections go through a loopback proxy in Pawket that applies the same rule to every connection.
 - DNS results and every redirect are validated; direct connections use pinned addresses.
-- HTML and X embed JSON are capped at 2 MiB, X HLS playlists (read only to detect audio) at 64 KiB, and downloaded files at 256 MiB.
+- HTML and X embed JSON are capped at 2 MiB and X HLS playlists (read only to detect audio) at 64 KiB.
 - Original bytes are streamed to a temporary file and committed without overwriting an existing destination.
 - The local HTTP API checks Host, Origin, and its pairing token; completed file links use unguessable download tickets.
 - There are no analytics, external font requests, cloud accounts, or hard-coded API keys. Logins are opt-in: only `--cookies-from-browser` or `--cookies` hands yt-dlp your sessions.
@@ -217,6 +217,6 @@ Offline tests use real X responses saved on 2026-11-06 in `crates/pawket-core/te
 
 ## Next implementation milestone
 
-Keep the UI small. Next candidates: a configurable size cap for long and 4K videos; recording live streams after they end; a visual check of the picker in the Chrome extension popup; a tested login flow with a real browser profile; job persistence before background Chrome notifications; and authenticated hosted operation before exposing the API publicly.
+Keep the UI small. Next candidates: recording live streams after they end; a visual check of the picker in the Chrome extension popup; a tested login flow with a real browser profile; job persistence before background Chrome notifications; and authenticated hosted operation before exposing the API publicly.
 
 See [docs/PRODUCT.md](PRODUCT.md) for the locked product direction.

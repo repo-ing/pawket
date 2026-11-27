@@ -2,7 +2,7 @@
 
 use crate::{
     network, parse, providers::host_matches, Conversion, MediaFormat, MediaInfo, MediaKind,
-    PawketError, Result, UnsupportedStream, MAX_MEDIA_BYTES,
+    PawketError, Result, UnsupportedStream,
 };
 use scraper::{Html, Selector};
 use serde::Deserialize;
@@ -254,12 +254,6 @@ fn joinable_video(video: &[MediaFormat], audio: &[MediaFormat]) -> Vec<MediaForm
     video
         .iter()
         .filter(|track| track.extension == "mp4")
-        .filter(|track| {
-            track
-                .size_bytes
-                .zip(audio.size_bytes)
-                .is_none_or(|(video, audio)| video.saturating_add(audio) <= MAX_MEDIA_BYTES)
-        })
         .take(8)
         .map(|video| {
             let label = video.label.as_deref().unwrap_or("Video");
@@ -291,9 +285,6 @@ fn to_format(entry: Format, combined: bool) -> Option<MediaFormat> {
         .content_length
         .as_deref()
         .and_then(|size| size.parse().ok());
-    if size.is_some_and(|size| size > MAX_MEDIA_BYTES) {
-        return None;
-    }
     let mut format = parse::direct_format(&url, mime, size)?;
     if format.kind == MediaKind::Image {
         return None;
