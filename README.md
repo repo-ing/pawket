@@ -2,7 +2,13 @@
 
 <h1 align="center">Pawket</h1>
 
-<p align="center"><em>by repo.ing</em></p>
+<p align="center"><strong><a href="https://github.com/repo-ing/pawket/releases/latest/download/Pawket-for-Mac.zip">Download Pawket for Mac (M1 or newer)</a></strong></p>
+
+On an Apple silicon Mac running macOS 14 or later, open the ZIP in Downloads and double-click **Pawket**. It opens in your browser. The app includes the tools for MP3 and MP4. To open Pawket again, click its Dock icon.
+
+This Mac preview is not notarized. If macOS blocks the first launch, follow [Apple’s instructions for opening an app from a known source](https://support.apple.com/en-us/102445).
+
+[Windows, Linux and Intel Mac downloads](https://github.com/repo-ing/pawket/releases/latest)
 
 ![Pawket: paste a link, pick Video or Audio and the quality, save](docs/pawket-demo.gif)
 
@@ -29,7 +35,7 @@ pawket serve --open
 
 Pawket opens at **http://127.0.0.1:3987**. Paste a link, press **Find media**, pick Video or Audio, and press **Save**. Keep the terminal open while you use it.
 
-On its own Pawket saves X posts, direct file links and media on ordinary web pages. For YouTube, TikTok, SoundCloud, Vimeo, playlists and the audio formats, also install [FFmpeg](https://ffmpeg.org/) and [yt-dlp](https://github.com/yt-dlp/yt-dlp). Pawket finds them on your PATH by itself (`--no-detect` turns that off).
+On its own Pawket saves X posts, direct file links and media on ordinary web pages. If you downloaded the Apple silicon app above, your media tools are already bundled. For the CLI and other platform ZIPs, to enable YouTube, TikTok, SoundCloud, Vimeo, playlists and the audio formats, install [FFmpeg](https://ffmpeg.org/) and [yt-dlp](https://github.com/yt-dlp/yt-dlp). Pawket finds them on your PATH by itself (`--no-detect` turns that off).
 
 | | Command |
 | --- | --- |
