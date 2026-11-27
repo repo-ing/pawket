@@ -1,0 +1,31 @@
+name: Windows installer
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/release/windows/**'
+      - '.github/workflows/windows-installer.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare compiler and public engine
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if (!(Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
+          "${env:ProgramFiles(x86)}\NSIS" >> $env:GITHUB_PATH
+          gh release download v0.3.0 --pattern pawket-windows-x64.zip
+      - run: python scripts/release/windows/build.py pawket-windows-x64.zip Pawket-Setup.exe
+      - run: ./scripts/release/windows/test.ps1 -Installer ./Pawket-Setup.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Pawket-Windows-Installer
+          path: Pawket-Setup.exe

@@ -49,10 +49,22 @@ jobs:
         run: |
           archive=dist/pawket-macos-arm64.zip
           python scripts/release/mac-app/build.py "$archive" dist/Pawket-for-Mac.zip --sha256 "$(shasum -a 256 "$archive" | cut -d ' ' -f 1)" --version "${GITHUB_REF_NAME#v}"
+      - name: Bundle Windows installer for release
+        if: matrix.platform == 'windows-x64' && startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        run: |
+          if (!(Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) { choco install nsis -y --no-progress }
+          $env:PATH += ";${env:ProgramFiles(x86)}\NSIS"
+          $archive = "dist/pawket-windows-x64.zip"
+          python scripts/release/windows/build.py $archive dist/Pawket-Setup.exe --sha256 ((Get-FileHash $archive).Hash.ToLower())
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./scripts/release/windows/test.ps1 -Installer ./dist/Pawket-Setup.exe
       - uses: actions/upload-artifact@v4
         with:
           name: pawket-${{ matrix.platform }}
-          path: dist/*.zip
+          path: |
+            dist/*.zip
+            dist/Pawket-Setup.exe
           if-no-files-found: error
 
   release:
@@ -69,10 +81,10 @@ jobs:
           merge-multiple: true
       - name: Checksums
         working-directory: dist
-        run: sha256sum *.zip > SHA256SUMS && cat SHA256SUMS
+        run: sha256sum *.zip Pawket-Setup.exe > SHA256SUMS && cat SHA256SUMS
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create "$GITHUB_REF_NAME" dist/*.zip dist/SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" dist/*.zip dist/Pawket-Setup.exe dist/SHA256SUMS
           --repo "$GITHUB_REPOSITORY" --title "Pawket $GITHUB_REF_NAME" --generate-notes
