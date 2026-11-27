@@ -35,7 +35,8 @@ Deno lets yt-dlp handle YouTube's player checks. Releases are not code-signed ye
 | YouTube playlists and channels | No | First 50 entries as a checklist |
 | TikTok, SoundCloud, Dailymotion, Bilibili and most other yt-dlp sites | No | Yes |
 | Vimeo | No | Public videos through Vimeo's embeddable player, no login |
-| Reddit, Instagram, private or members-only videos | No | Only with your browser's login (`--cookies-from-browser`) |
+| Public Instagram Reels | No | Available public posts can download directly. Some posts require login. |
+| Reddit, private or members-only videos | No | May require your browser's login (`--cookies-from-browser`) |
 | DRM-protected video, live streams | No | No |
 | Files over 256 MiB | No | No (size cap) |
 

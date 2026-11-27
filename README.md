@@ -4,6 +4,8 @@
 
 Save a video as **MP4** or just the audio as **MP3**. Paste a link, pick what you want, and the file lands in your browser’s Downloads. Pawket runs on your computer and needs no Pawket account.
 
+[Official Pawket website and installation guide](https://repo-ing.github.io/pawket/)
+
 ## Download Pawket
 
 | Your computer | Download | Open it |
