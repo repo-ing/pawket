@@ -86,6 +86,19 @@ jobs:
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create "$GITHUB_REF_NAME" dist/*.zip dist/Pawket-Setup.exe dist/SHA256SUMS
-          --repo "$GITHUB_REPOSITORY" --title "Pawket $GITHUB_REF_NAME" --generate-notes
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json isDraft,assets > existing.json; then
+            python3 - <<'PYTHON'
+          import json
+          from pathlib import Path
+          release = json.loads(Path("existing.json").read_text())
+          expected = {p.name for p in Path("dist").iterdir() if p.is_file()}
+          uploaded = {a["name"] for a in release["assets"] if a["state"] == "uploaded" and a["size"] > 0}
+          if release["isDraft"] or not expected.issubset(uploaded):
+              raise SystemExit("Existing release is a draft or lacks required assets; inspect before publishing.")
+          print("This version is already published with all required assets.")
+          PYTHON
+          else
+            gh release create "$GITHUB_REF_NAME" dist/*.zip dist/Pawket-Setup.exe dist/SHA256SUMS \
+              --repo "$GITHUB_REPOSITORY" --title "Pawket $GITHUB_REF_NAME" --generate-notes
+          fi
