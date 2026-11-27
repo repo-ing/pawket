@@ -54,24 +54,14 @@ footer { padding-block: 22px; border-top: 1px solid #34343b; color: #aaaab7; fon
   section { padding-block: 24px; }
 }
 
-:root{background:#0b100d;color:#f3faf4}
-nav{border-color:#27332b}
-header{grid-template-columns:1.15fr .85fr;padding-block:clamp(36px,5vw,72px)}
-header::before{background:none}
-h1{font-size:clamp(56px,6.4vw,92px);font-weight:720}
-h1 span{color:#86f49c}
-header p,section p{color:#bac7bf}
-.actions a{border-radius:100px;padding:13px 20px;background:#86f49c;color:#102016}
-.actions a+a{background:#212b24;border-color:#526057;color:#f5faf6}
-.mascot{display:grid;place-items:center;aspect-ratio:1.48;background:radial-gradient(ellipse at 50% 90%,#6edd84,#a8f9b4 65%,#c1ffca);border:0;border-radius:28px;box-shadow:none}
-.mascot img{width:53%;transform:rotate(-8deg);filter:drop-shadow(0 14px 12px #213b2226)}
-section,footer{border-color:#2c382f}
-.steps{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;padding:0;margin:20px 0 0}
-.steps li{margin:0}
-.shot{min-height:110px;aspect-ratio:2.5;display:grid;align-items:center;padding:10px;background:#1c2920;border-radius:16px}
-.shot img{display:block;width:100%;height:auto;border-radius:6px}
-.steps h3{color:#f3faf4;font-size:22px;letter-spacing:-.045em;margin:12px 0 0}
-.steps p{margin:3px 0}
-details summary{cursor:pointer;font-weight:650;color:#e3eee6}
-a{color:#a7eeb6}
-@media(max-width:760px){header{grid-template-columns:1fr}.mascot{width:100%;aspect-ratio:2.7}.mascot img{width:auto;height:100%;max-height:134px}.steps{grid-template-columns:1fr;gap:22px}.shot{max-width:440px;min-height:0;aspect-ratio:3.4}.steps h3{margin-top:6px}}
+.steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding: 0; margin: 22px 0 0; }
+.steps li { margin: 0; }
+.shot { display: grid; align-items: center; aspect-ratio: 2.6; padding: 12px; background: linear-gradient(145deg, #202027, #141418); border: 1px solid #36353f; border-radius: 12px; }
+.shot img { display: block; width: 100%; height: auto; }
+.steps h3 { margin: 13px 0 2px; color: #efeff4; font-size: 20px; font-weight: 610; letter-spacing: -.035em; }
+.steps p { margin: 0; }
+details summary { cursor: pointer; color: #e1e0e8; font-weight: 600; }
+@media (max-width: 760px) {
+  .steps { grid-template-columns: 1fr; gap: 24px; }
+  .shot { max-width: 490px; aspect-ratio: 3.5; }
+}
