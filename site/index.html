@@ -12,17 +12,15 @@
 <meta property="og:url" content="https://repo-ing.github.io/pawket/">
 <meta property="og:image" content="https://repo-ing.github.io/pawket/pawket-logo-320.png">
 <link rel="icon" href="pawket-logo-320.png">
-<style>
-:root{color-scheme:light;font:17px/1.6 "Inter",system-ui,sans-serif;color:#233027;background:#fafbf8}*{box-sizing:border-box}body{margin:0}main,nav,footer{max-width:58rem;margin:auto;padding:1.4rem}nav,footer{display:flex;justify-content:space-between;align-items:center;gap:1rem}nav{border-bottom:1px solid #d6ddd6}nav strong{font-size:1.28rem}a{color:#285d41;text-underline-offset:.18em}header{padding:3rem 0;display:grid;grid-template-columns:1fr minmax(6rem,10rem);gap:1.3rem;align-items:center}header img{width:100%;height:auto}h1{font-size:clamp(2.5rem,6vw,4.6rem);line-height:1.02;letter-spacing:-.065em;margin:0}h2{letter-spacing:-.035em;line-height:1.18;margin:0 0 .8rem}p{max-width:62ch}.actions{display:flex;gap:.6rem;flex-wrap:wrap}.actions a{padding:.62rem 1rem;background:#235139;color:white;border-radius:.5rem;font-weight:650;text-decoration:none}.actions a+a{background:#e4ebe4;color:#25452e}section{padding:1.6rem 0;border-top:1px solid #d6ddd6}li+li{margin-top:.35rem}footer{font-size:.9rem;border-top:1px solid #d6ddd6}@media(max-width:540px){header{grid-template-columns:1fr;padding:2rem 0}header img{display:none}}
-</style>
+<link rel="stylesheet" href="theme.css">
 </head>
-<body><nav aria-label="Main"><strong>Pawket</strong><a href="https://github.com/repo-ing/pawket">Source on GitHub</a></nav>
+<body><nav aria-label="Main"><a class="brand" href="./"><img src="pawket-logo-320.png" alt="" width="32" height="32">Pawket</a><div class="navlinks"><a href="#first-download">How it works</a><a href="https://github.com/repo-ing/pawket">GitHub ↗</a></div></nav>
 <main>
-<header><div><h1>Save a link as MP3 or MP4.</h1>
-<p>Pawket is an open-source desktop downloader for Windows and Mac. It opens in your browser and uses a local Rust engine to save video or extract audio on your computer. No Pawket account is required.</p>
+<header><div><h1>Save a link as<br><span>MP3 or MP4.</span></h1>
+<p>Paste a video link. Keep the video or just the soundtrack. Pawket runs on your computer, with no account required.</p>
 <div class="actions"><a href="https://github.com/repo-ing/pawket/releases/latest/download/Pawket-Setup.exe">Download for Windows</a><a href="https://github.com/repo-ing/pawket/releases/latest/download/Pawket-for-Mac.zip">Download for Mac</a></div></div>
-<img src="pawket-logo-320.png" width="320" height="320" alt="Pawket cat"></header>
-<section id="install"><h2>Which download do I need?</h2>
+<figure><figcaption><span class="lights" aria-hidden="true">● ● ●</span>Pawket</figcaption><img src="picker.png" width="820" height="625" alt="Pawket downloading an MP3 with Audio selected at 320 kbps"></figure></header>
+<div class="guides"><section id="install"><h2>Which download do I need?</h2>
 <p><strong>Windows 10 or 11, Intel or AMD 64-bit.</strong> Open the installer and choose Finish. Later, open Pawket from the Start menu.</p>
 <p><strong>Apple silicon Mac, macOS 14 or later.</strong> Open the ZIP and double-click Pawket. Both desktop downloads include FFmpeg, yt-dlp and Deno.</p>
 <p><a href="https://github.com/repo-ing/pawket/releases/latest">Intel Mac, Linux and portable ZIPs</a></p></section>
@@ -32,5 +30,5 @@
 <section id="verification"><h2>How has Pawket been tested?</h2>
 <p>The Windows installer test installs Pawket on a clean GitHub-hosted Windows runner, opens it from the Start menu, downloads a public sample as MP3 and MP4, and decodes both files with FFmpeg.</p>
 <a href="https://github.com/repo-ing/pawket/actions/runs/46078348988">See the Windows test run</a> · <a href="https://github.com/repo-ing/pawket/blob/main/docs/VERIFICATION.md">Read the verification notes</a></section>
-<section id="developers"><h2>Can I automate downloads?</h2><p>The same engine is available through a command-line interface, a local HTTP API and an MCP server for agents. The project provides a Chrome extension as well.</p><a href="https://github.com/repo-ing/pawket/blob/main/docs/GUIDE.md">Read the developer guide</a> · <a href="https://github.com/repo-ing/pawket/blob/main/docs/API.md">HTTP API</a></section>
+<section id="developers"><h2>Can I automate downloads?</h2><p>The same engine is available through a command-line interface, a local HTTP API and an MCP server for agents. The project provides a Chrome extension as well.</p><a href="https://github.com/repo-ing/pawket/blob/main/docs/GUIDE.md">Read the developer guide</a> · <a href="https://github.com/repo-ing/pawket/blob/main/docs/API.md">HTTP API</a></section></div>
 </main><footer><span>Pawket by repo.ing</span><a href="https://github.com/repo-ing/pawket/releases">GitHub releases</a></footer></body></html>
