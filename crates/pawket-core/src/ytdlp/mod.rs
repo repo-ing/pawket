@@ -206,8 +206,12 @@ async fn checked_link(link: &str) -> Result<Url> {
 /// A checked link moved to the site's public route where it has one (for
 /// example Vimeo's player), with the arguments that route needs.
 async fn routed_link(link: &str) -> Result<(Url, Vec<String>)> {
-    let (url, args) = routes::public_route(&checked_link(link).await?);
-    Ok((checked_link(url.as_str()).await?, args))
+    let source = checked_link(link).await?;
+    let (url, args) = routes::public_route(&source);
+    if url != source {
+        checked_link(url.as_str()).await?;
+    }
+    Ok((url, args))
 }
 
 /// Bytes across the files of one run; yt-dlp restarts its counter for each

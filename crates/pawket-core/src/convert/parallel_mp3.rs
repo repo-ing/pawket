@@ -1,7 +1,7 @@
 //! Encode frame-aligned blocks of PCM. Overlap primes the analysis filter at
 //! each boundary. Disabling the bit reservoir makes the retained frames independent.
 use super::*;
-use futures_util::{stream::FuturesOrdered, StreamExt};
+use futures_util::{stream, TryStreamExt};
 use std::io::SeekFrom;
 use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
 
@@ -208,35 +208,45 @@ pub(super) async fn run(
     reader.read_exact(&mut wav).await?;
     let pcm = Pcm::from_header(&wav)?;
     let stride = pcm.frame_bytes();
-    let mut prefix = Vec::new();
-    let mut ahead = Vec::new();
-    let mut pending = FuturesOrdered::new();
+    // Poll the encoders while waiting for PCM from the decoder. At most
+    // `workers` blocks can be in flight, and output stays in source order.
+    let paths = (executable.to_owned(), directory.to_owned());
+    let blocks = stream::try_unfold(Some((reader, Vec::new())), move |state| {
+        let (ffmpeg, output_dir) = paths.clone();
+        async move {
+            let Some((mut reader, mut data)) = state else {
+                return Ok::<_, PawketError>(None);
+            };
+            let skip = if data.is_empty() { 0 } else { OVERLAP };
+            let wanted = (skip + BLOCK + OVERLAP) * stride;
+            let remaining = wanted - data.len();
+            data.reserve_exact(remaining);
+            (&mut reader)
+                .take(remaining as u64)
+                .read_to_end(&mut data)
+                .await?;
+            let last = data.len() < wanted;
+            let next = if last {
+                None
+            } else {
+                let start = (skip + BLOCK - OVERLAP) * stride;
+                Some((reader, data[start..].to_vec()))
+            };
+            Ok(Some((
+                async move { encode(&ffmpeg, &output_dir, pcm, data, skip, last).await },
+                next,
+            )))
+        }
+    });
+    let parts = blocks.try_buffered(workers);
+    futures_util::pin_mut!(parts);
     let (mut out, path) = storage::create_temporary(directory).await?;
     let mut frames = 0u32;
     let mut bytes = 0u32;
     let table = crc_table();
     let mut music_crc = 0;
     let mut final_header = Vec::new();
-    let mut ended = false;
-    while !ended || !pending.is_empty() {
-        while !ended && pending.len() < workers {
-            let skip = prefix.len() / stride;
-            let mut data = std::mem::take(&mut prefix);
-            data.append(&mut ahead);
-            let wanted = (skip + BLOCK + OVERLAP) * stride;
-            (&mut reader)
-                .take((wanted - data.len()) as u64)
-                .read_to_end(&mut data)
-                .await?;
-            ended = data.len() < wanted;
-            if !ended {
-                let cut = (skip + BLOCK) * stride;
-                prefix = data[cut - OVERLAP * stride..cut].to_vec();
-                ahead = data[cut..].to_vec();
-            }
-            pending.push_back(encode(executable, directory, pcm, data, skip, ended));
-        }
-        let part = pending.next().await.ok_or(INVALID)??;
+    while let Some(part) = parts.try_next().await? {
         if bytes == 0 {
             out.write_all(&part.header).await?;
             bytes = part.header.len() as u32;
