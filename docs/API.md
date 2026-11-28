@@ -75,6 +75,8 @@ This means the local engine prepared the file. It does not mean the user's brows
 
 HTTP format IDs are bound to a retained inspection plan for the exact source and selected media. Plans expire after 10 minutes; up to 64 are retained. A media URL can also expire between inspection and download. Handle an expired plan or unavailable media as an actionable failure and inspect again; do not silently substitute a format. Omit format_id for a one-shot operation that inspects and chooses the first format immediately.
 
+For an audio track in its original format, use `"format_id":"quick-original"`. This requires an audio-only source track. For a one-step 128 kbps audio save, pass `"format_id":"quick-mp3"`. Pawket resolves the audio at download time for individual YouTube videos. For other supported links it inspects the source and chooses the first available 128 kbps MP3 conversion. The desktop shortcut uses a faster LAME encoding preset for individual YouTube videos. Selecting MP3 through the format picker uses the standard preset.
+
 ## POST /v1/jobs
 
 Starts a download that keeps running after the request returns. Same body as `/v1/download`, plus an optional `client` tag (letters, digits and `-`, up to 24 characters; default `api`) that groups jobs by the surface that started them:

@@ -298,6 +298,75 @@ impl Engine {
         self.ytdlp.as_ref().map(ytdlp::Backend::version)
     }
 
+    pub async fn warm_audio(&self) {
+        if let Some(backend) = &self.ytdlp {
+            backend.warm_audio().await;
+        }
+    }
+
+    pub async fn mp3_selection(&self, input: &str) -> Result<(MediaInfo, MediaFormat)> {
+        self.audio_selection(input, false).await
+    }
+
+    /// Resolve an audio shortcut. For individual YouTube videos
+    /// the downloader can discover the title and audio in one invocation.
+    pub async fn audio_selection(
+        &self,
+        input: &str,
+        original: bool,
+    ) -> Result<(MediaInfo, MediaFormat)> {
+        if !original && !self.can_convert() {
+            return Err(PawketError::ConverterUnavailable);
+        }
+        let source = network::validate_url(input)?;
+        if self.ytdlp.is_some() && youtube::video_id(&source).is_some() {
+            let base = MediaFormat {
+                url: source.to_string(),
+                kind: MediaKind::Audio,
+                ..Default::default()
+            };
+            let format = if original {
+                MediaFormat {
+                    id: "ytdlp-quick-original".into(),
+                    label: Some("Original audio".into()),
+                    ..base
+                }
+            } else {
+                MediaFormat {
+                    id: "ytdlp-quick-mp3".into(),
+                    conversion: Some(Conversion::Mp3),
+                    label: Some("MP3 · 128 kbps".into()),
+                    bitrate: Some(128000),
+                    extension: "mp3".into(),
+                    mime_type: "audio/mpeg".into(),
+                    ..base
+                }
+            };
+            let info = MediaInfo {
+                source_url: source.to_string(),
+                title: "YouTube audio".into(),
+                provider: ytdlp::PROVIDER.into(),
+                formats: vec![format.clone()],
+                unsupported: vec![],
+            };
+            return Ok((info, format));
+        }
+        let info = self.inspect(input).await?;
+        let format = info
+            .formats
+            .iter()
+            .find(|f| {
+                if original {
+                    f.kind == MediaKind::Audio && f.conversion.is_none()
+                } else {
+                    f.conversion == Some(Conversion::Mp3) && f.bitrate == Some(128000)
+                }
+            })
+            .ok_or(PawketError::FormatUnavailable)?
+            .clone();
+        Ok((info, format))
+    }
+
     /// Inspect a public HTTPS media file or an HTML page containing media.
     pub async fn inspect(&self, input: &str) -> Result<MediaInfo> {
         let mut info = self.inspect_originals(input).await?;

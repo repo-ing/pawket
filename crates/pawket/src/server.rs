@@ -157,6 +157,10 @@ pub async fn run(
     open: bool,
 ) -> anyhow::Result<()> {
     anyhow::ensure!(host.is_loopback(), "This release binds to loopback only. Public hosting requires a separate authenticated deployment.");
+    let warm_engine = engine.clone();
+    tokio::spawn(async move {
+        warm_engine.warm_audio().await;
+    });
     // Bind first so --port 0 uses the assigned port in Host and Origin checks.
     let listener = tokio::net::TcpListener::bind(SocketAddr::new(host, port))
         .await
@@ -559,6 +563,13 @@ async fn planned_selection(
     state: &AppState,
     input: &DownloadInput,
 ) -> Result<(MediaInfo, MediaFormat), Response> {
+    if let Some(shortcut @ ("quick-mp3" | "quick-original")) = input.format_id.as_deref() {
+        return state
+            .engine
+            .audio_selection(&input.url, shortcut == "quick-original")
+            .await
+            .map_err(|error| api_error(StatusCode::UNPROCESSABLE_ENTITY, error.code(), error));
+    }
     let Some(format_id) = input.format_id.as_deref() else {
         // One-shot callers may omit format_id. Inspect and choose at this moment.
         let info =
@@ -679,8 +690,19 @@ async fn perform_download(
     };
     state.files.lock().await.insert(id.to_owned(), saved);
     prune_files(state).await;
+    let title = if matches!(
+        format.id.as_str(),
+        "ytdlp-quick-mp3" | "ytdlp-quick-original"
+    ) {
+        FilePath::new(&result.filename)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(&result.filename)
+    } else {
+        &info.title
+    };
     let entry = HistoryEntry::now(
-        &info.title,
+        title,
         &result.source_url,
         &result.filename,
         result.bytes,

@@ -246,6 +246,27 @@ pub(crate) async fn run(
     conversion: Conversion,
     kbps: Option<u32>,
 ) -> Result<(TempPath, u64)> {
+    run_with_effort(
+        executable,
+        input,
+        separate_audio,
+        directory,
+        conversion,
+        kbps,
+        None,
+    )
+    .await
+}
+
+pub(crate) async fn run_with_effort(
+    executable: &Path,
+    input: &Path,
+    separate_audio: Option<&Path>,
+    directory: &Path,
+    conversion: Conversion,
+    kbps: Option<u32>,
+    mp3_effort: Option<u8>,
+) -> Result<(TempPath, u64)> {
     if separate_audio.is_some() && conversion != Conversion::Mp4 {
         return Err(PawketError::FormatUnavailable);
     }
@@ -298,6 +319,9 @@ pub(crate) async fn run(
         command.args(["-map", "0:V:0", "-map", "1:a:0", "-c", "copy"]);
     } else {
         command.args(encode_args(conversion, kbps));
+        if let Some(effort) = mp3_effort {
+            command.arg("-compression_level").arg(effort.to_string());
+        }
     }
     command
         .args(["-f", conversion.extension(), "-fd", "1", "fd:"])

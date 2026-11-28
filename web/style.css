@@ -342,3 +342,5 @@ footer { border-top: 1px solid var(--line); }
 
 .save-folder { display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px; padding:4px 18px 12px; font-size:13px; color:var(--text-2); }
 #folder-name { overflow-wrap:anywhere; }
+
+.audio-shortcuts { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 10px; }

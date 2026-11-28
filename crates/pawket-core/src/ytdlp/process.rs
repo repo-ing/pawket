@@ -29,6 +29,24 @@ impl Run {
         Ok(Self { child, group })
     }
 
+    pub(crate) fn is_running(&mut self) -> bool {
+        match self.child.try_wait() {
+            Ok(None) => true,
+            Ok(Some(_)) => {
+                self.group = None;
+                false
+            }
+            Err(_) => false,
+        }
+    }
+
+    pub(crate) fn stdin(&mut self) -> Result<tokio::process::ChildStdin> {
+        self.child
+            .stdin
+            .take()
+            .ok_or(PawketError::BackendUnavailable)
+    }
+
     pub(crate) fn stdout(&mut self) -> Result<ChildStdout> {
         self.child
             .stdout

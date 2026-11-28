@@ -23,7 +23,14 @@ def stage_tools(platform, directory):
         tool = directory / "tools" / filename
         tool.parent.mkdir(exist_ok=True)
         entry = asset.get("entry")
-        if not entry:
+        if "runtime_entry" in asset:
+            # The upstream macOS directory build loads Python in place. ditto
+            # preserves the signed framework's symlinks and executable modes.
+            runtime = directory / "tools" / "yt-runtime"
+            subprocess.run(["ditto", "-x", "-k", download, runtime], check=True)
+            tool.symlink_to(Path(runtime.name) / asset["runtime_entry"])
+            staged.append(runtime)
+        elif not entry:
             download.rename(tool)
         elif download.suffix == ".zip":
             with ZipFile(download) as archive, archive.open(entry) as source, tool.open("wb") as dest:

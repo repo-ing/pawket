@@ -22,6 +22,8 @@ The Windows installer and Apple silicon Mac app include the media tools. Pawket 
 2. Paste it into Pawket and click **Find media**.
 3. Choose **Video** for an MP4 or **Audio → MP3** for the soundtrack, then click **Save**.
 
+On desktop, **Save MP3** saves a 128 kbps MP3 in one click. **Save original audio** keeps the source audio track in its existing format when one is available.
+
 ![Pawket finding a video and saving the selected format](docs/pawket-demo.gif)
 
 ## Common questions

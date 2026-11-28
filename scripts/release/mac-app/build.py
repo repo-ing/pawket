@@ -31,7 +31,12 @@ def main(engine_zip, output, expected, version):
             (resources / "LICENSE").write_bytes(archive.read("Pawket/LICENSE"))
         (helpers / "pawket").chmod(0o755)
         for tool in stage_tools("macos-arm64", work):
-            shutil.copy2(tool, helpers / tool.name)
+            if tool.is_dir():
+                shutil.copytree(tool, resources / tool.name, symlinks=True)
+            elif tool.is_symlink():
+                (helpers / tool.name).symlink_to(Path("../Resources") / tool.readlink())
+            else:
+                shutil.copy2(tool, helpers / tool.name, follow_symlinks=False)
         shutil.copytree(HERE.parent / "licenses", resources / "licenses")
         shutil.copy2(HERE.parent / "media-tools.json", resources / "upstream.json")
         run("swiftc", "-O", "-target", "arm64-apple-macos14.0", HERE / "main.swift", "-o", macos / "Pawket")

@@ -210,6 +210,31 @@ pub fn start(surface: &str, current_url: &str, auto_inspect: bool) -> Result<(),
         input("url-input")?.set_value(current_url);
     }
 
+    if surface == Surface::Web {
+        for shortcut in ["quick-mp3", "quick-original"] {
+            bind(shortcut, "click", {
+                let state = state.clone();
+                move |_| {
+                    if state.borrow().busy {
+                        return;
+                    }
+                    let Ok(field) = input("url-input") else {
+                        return;
+                    };
+                    let source = field.value().trim().to_owned();
+                    if let Err(message) = valid_source(&source) {
+                        status(&message, "error");
+                        return;
+                    }
+                    let state = state.clone();
+                    spawn_local(
+                        async move { start_jobs(state, source, vec![shortcut.into()]).await },
+                    );
+                }
+            })?;
+        }
+    }
+
     bind("inspect-form", "submit", {
         let state = state.clone();
         move |event| {
@@ -1311,6 +1336,8 @@ fn busy(value: bool, inspect_label: &str) {
     }
     for id in [
         "inspect-button",
+        "quick-original",
+        "quick-mp3",
         "paste-button",
         "save-button",
         "save-all-button",

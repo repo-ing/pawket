@@ -11,6 +11,7 @@ mod process;
 mod proxy;
 mod routes;
 mod select;
+mod worker;
 
 pub use cookies::CookieSource;
 pub(crate) use offer::{single, Abilities, Track};
@@ -61,12 +62,19 @@ const ISOLATION: [&str; 2] = ["--ignore-config", "--no-plugin-dirs"];
 /// A checked yt-dlp executable.
 #[derive(Clone, Debug)]
 pub(crate) struct Backend {
+    worker: std::sync::Arc<worker::AudioWorker>,
     executable: PathBuf,
     version: String,
     cookies: Option<CookieSource>,
 }
 
 impl Backend {
+    pub(crate) async fn warm_audio(&self) {
+        if self.cookies.is_none() {
+            self.worker.warm(self).await;
+        }
+    }
+
     pub(crate) fn version(&self) -> &str {
         &self.version
     }
@@ -122,6 +130,7 @@ pub(crate) async fn check_executable(executable: PathBuf) -> Result<Backend> {
         .await
         .map_err(|_| PawketError::BackendUnavailable)?;
     let backend = Backend {
+        worker: Default::default(),
         executable,
         version: String::new(),
         cookies: None,
@@ -227,6 +236,29 @@ pub(crate) async fn download(
     directory: &Path,
     progress: &Progress,
 ) -> Result<DownloadResult> {
+    if matches!(
+        format.id.as_str(),
+        "ytdlp-quick-mp3" | "ytdlp-quick-original"
+    ) && backend.cookies().is_none()
+    {
+        match download_with_options(backend, ffmpeg, info, format, directory, progress, true).await
+        {
+            Err(PawketError::FormatUnavailable) => {}
+            other => return other,
+        }
+    }
+    download_with_options(backend, ffmpeg, info, format, directory, progress, false).await
+}
+
+async fn download_with_options(
+    backend: &Backend,
+    ffmpeg: Option<&Path>,
+    info: &MediaInfo,
+    format: &MediaFormat,
+    directory: &Path,
+    progress: &Progress,
+    direct_audio: bool,
+) -> Result<DownloadResult> {
     let plan = select::plan(&format.id, ffmpeg.is_some()).ok_or(if ffmpeg.is_none() {
         PawketError::ConverterUnavailable
     } else {
@@ -237,47 +269,100 @@ pub(crate) async fn download(
     let work = tempfile::Builder::new()
         .prefix(".pawket-ytdlp-")
         .tempdir_in(directory)?;
-    let proxy = GuardProxy::start().await?;
+    // Isolate partial files from a worker that exits or declines a source.
+    let worker_dir = tempfile::tempdir_in(work.path())?;
+    let used_worker = if direct_audio {
+        match crate::youtube::video_id(&url) {
+            Some(id) => {
+                backend
+                    .worker
+                    .download(backend, &id, &worker_dir.path().canonicalize()?, progress)
+                    .await
+                    && finished_file(worker_dir.path()).await.is_ok()
+            }
+            None => false,
+        }
+    } else {
+        false
+    };
+    if !used_worker {
+        let proxy = GuardProxy::start().await?;
 
-    let mut command = backend.command(&proxy);
-    command
-        .args([
-            "--newline",
-            "--progress",
-            "--progress-template",
-            PROGRESS_TEMPLATE,
-        ])
-        .args([
-            "--no-mtime",
-            "--concurrent-fragments",
-            "4",
-            "--playlist-items",
-            "1",
-        ])
-        // -P takes a plain path; only the -o template is expanded.
-        .arg("-P")
-        .arg(work.path())
-        .args(["-o", OUTPUT_TEMPLATE])
-        .args(&route_args);
-    if let Some(ffmpeg) = ffmpeg {
-        command.arg("--ffmpeg-location").arg(ffmpeg);
-    }
-    command.args(&plan.args).arg("--").arg(url.as_str());
+        let mut command = backend.command(&proxy);
+        command
+            .args([
+                "--newline",
+                "--progress",
+                "--progress-template",
+                PROGRESS_TEMPLATE,
+            ])
+            .args([
+                "--no-mtime",
+                "--concurrent-fragments",
+                "4",
+                "--playlist-items",
+                "1",
+            ])
+            // -P takes a plain path; only the -o template is expanded.
+            .arg("-P")
+            .arg(work.path())
+            .args(["-o", OUTPUT_TEMPLATE])
+            .args(&route_args);
+        if let Some(ffmpeg) = ffmpeg {
+            command.arg("--ffmpeg-location").arg(ffmpeg);
+        }
+        if matches!(
+            format.id.as_str(),
+            "ytdlp-quick-mp3" | "ytdlp-quick-original"
+        ) {
+            command.args([
+                "--match-filter",
+                "live_status!=?is_live & live_status!=?is_upcoming",
+            ]);
+        }
+        if direct_audio {
+            // Prefer a direct audio track for the shortcut. A manifest-only video
+            // is retried with yt-dlp's full default set of clients and protocols.
+            command.args([
+                "--extractor-args",
+                "youtube:player_client=tv_samsung;skip=hls,dash",
+            ]);
+        }
+        command.args(&plan.args).arg("--").arg(url.as_str());
 
-    let mut run = Run::spawn(command)?;
-    let (stdout, stderr) = (run.stdout()?, run.stderr()?);
-    let errors = tokio::spawn(read_capped(stderr, MAX_STDERR_BYTES));
-    timeout(DOWNLOAD_TIMEOUT, watch_progress(stdout, progress))
-        .await
-        .map_err(|_| PawketError::Network("The download took too long".into()))??;
-    // Any error above drops `run`, which stops yt-dlp and its FFmpeg.
-    let status = run.finish(EXIT_TIMEOUT).await?;
-    let (errors, _) = errors.await.unwrap_or_default();
-    if !status.success() {
-        return Err(backend.error_from(&errors));
+        let mut run = Run::spawn(command)?;
+        let (stdout, stderr) = (run.stdout()?, run.stderr()?);
+        let errors = tokio::spawn(read_capped(stderr, MAX_STDERR_BYTES));
+        timeout(DOWNLOAD_TIMEOUT, watch_progress(stdout, progress))
+            .await
+            .map_err(|_| PawketError::Network("The download took too long".into()))??;
+        // Any error above drops `run`, which stops yt-dlp and its FFmpeg.
+        let status = run.finish(EXIT_TIMEOUT).await?;
+        let (errors, _) = errors.await.unwrap_or_default();
+        if !status.success() {
+            if direct_audio {
+                let message = String::from_utf8_lossy(&errors);
+                if message.contains("Requested format is not available")
+                    || message.contains("No video formats found")
+                    || message.contains("HTTP Error 403")
+                {
+                    return Err(PawketError::FormatUnavailable);
+                }
+            }
+            return Err(backend.error_from(&errors));
+        }
     }
-    let (file, bytes) = finished_file(work.path()).await?;
-    let title = if select::is_item(&format.id) {
+    let (file, bytes) = finished_file(if used_worker {
+        worker_dir.path()
+    } else {
+        work.path()
+    })
+    .await?;
+    let title = if matches!(
+        format.id.as_str(),
+        "ytdlp-quick-mp3" | "ytdlp-quick-original"
+    ) || select::is_item(&format.id)
+    {
         file.file_stem()
             .and_then(|stem| stem.to_str())
             .unwrap_or(&info.title)
@@ -296,8 +381,16 @@ pub(crate) async fn download(
         }
         (Some((conversion, kbps)), Some(ffmpeg)) => {
             progress.set_total(None);
-            let (converted, bytes) =
-                convert::run(ffmpeg, &file, None, work.path(), conversion, kbps).await?;
+            let (converted, bytes) = convert::run_with_effort(
+                ffmpeg,
+                &file,
+                None,
+                work.path(),
+                conversion,
+                kbps,
+                (format.id == "ytdlp-quick-mp3").then_some(7),
+            )
+            .await?;
             let path = converted.to_path_buf();
             (
                 path,

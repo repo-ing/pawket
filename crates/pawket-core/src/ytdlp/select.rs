@@ -71,6 +71,10 @@ pub(crate) fn plan(id: &str, can_merge: bool) -> Option<Plan> {
     let choice = id.strip_prefix("ytdlp-")?;
     let needs_ffmpeg = |plan: Plan| can_merge.then_some(plan);
     match choice {
+        "quick-original" => return Some(Plan::download(strings(&["-f", "ba"]))),
+        "quick-mp3" => {
+            return needs_ffmpeg(Plan::download(best_audio()).then(Conversion::Mp3, Some(128)))
+        }
         "best" => return Some(Plan::download(joined("", can_merge, "mp4"))),
         "best-mute" | "mute" => {
             return needs_ffmpeg(Plan::download(video_only("")).then(Conversion::Mute, None))
@@ -164,6 +168,11 @@ mod tests {
 
     #[test]
     fn audio_choices_download_best_audio_then_convert() {
+        assert_eq!(plan("ytdlp-quick-mp3", true), plan("ytdlp-mp3-128", true));
+        assert!(plan("ytdlp-quick-mp3", false).is_none());
+        let original = plan("ytdlp-quick-original", false).unwrap();
+        assert_eq!(original.args, ["-f", "ba"]);
+        assert_eq!(original.post, None);
         assert_eq!(
             plan("ytdlp-mp3", true).unwrap().post,
             Some((Conversion::Mp3, Some(192)))

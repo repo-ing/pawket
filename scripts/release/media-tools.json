@@ -1,8 +1,9 @@
 {
   "macos-arm64": {
     "yt-dlp": {
-      "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.11.23/yt-dlp_macos",
-      "sha256": "57654854886d0398a798895aadf5173e2749fbb5e249b9f3728022ab376e11fb"
+      "url": "https://github.com/yt-dlp/yt-dlp/releases/download/2026.11.23/yt-dlp_macos.zip",
+      "sha256": "43fc87fc581f64b48c366ce20b9cacb9c2949cc1ac4b9eca56fe25ac52dbb63b",
+      "runtime_entry": "yt-dlp_macos"
     },
     "deno": {
       "url": "https://github.com/denoland/deno/releases/download/v2.9.8/deno-aarch64-apple-darwin.zip",
