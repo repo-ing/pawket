@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pawket for iPhone</title><meta name="theme-color" content="#111114">
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="../pawket-logo-320.png"><link rel="stylesheet" href="../theme.css"><link rel="stylesheet" href="mobile.css"></head>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="../pawket-logo-320.png"><link rel="stylesheet" href="../theme.css"><link rel="stylesheet" href="mobile.css?v=2"></head>
 <body><nav aria-label="Main"><a class="brand" href="../"><img src="../pawket-logo-320.png" width="32" height="32" alt="">Pawket</a></nav>
 <main><h1>Pawket for iPhone</h1>
-<p>Save a public video or its audio on your iPhone.</p>
-<section aria-labelledby="setup"><h2 id="setup">Set up video downloads</h2>
-<ol><li><a href="https://apps.apple.com/app/id1543537943">Install a-Shell mini</a> and open it once.</li><li><a href="https://www.icloud.com/shortcuts/695f53b649c947d998ae058d03efcc43">Add the SW-DLT shortcut</a>. Keep its name so Pawket can open it.</li></ol>
-<p>In YouTube or Instagram, tap <strong>Share → SW-DLT</strong>. You may need to tap <strong>More</strong> first. Choose video or MP3 audio, then <strong>Save to Files</strong>. The first run sets up the downloader on your phone. Availability depends on the post.</p></section>
-<form id="save"><label for="link">Or paste a link</label><input id="link" type="url" required placeholder="https://…" autocapitalize="none" spellcheck="false" inputmode="url"><button>Open media</button><p id="error" role="alert"></p></form>
-<p>Direct MP3 and MP4 files open in Safari. Other links open in SW-DLT. If Shortcuts can’t find it, use <strong>Add the SW-DLT shortcut</strong> above.</p>
-<div id="install"><details><summary>Add Pawket to your Home Screen</summary><p>In Safari tap <strong>Share → Add to Home Screen → Add</strong>.</p></details></div>
-<p><a href="https://github.com/net00-1/SW-DLT">About the third-party SW-DLT shortcut</a></p>
-</main><script src="mobile.js"></script></body></html>
+<form id="save" novalidate><label for="link">Paste a video or audio link</label><input id="link" type="url" required placeholder="https://…" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="url" enterkeyhint="go" aria-describedby="error"><button>Pawket</button><p id="error" role="alert"></p></form>
+<details id="setup"><summary>Set up YouTube &amp; Instagram</summary>
+<p>Do this once on your iPhone.</p>
+<ol><li><a href="https://apps.apple.com/app/id1543537943" target="_blank" rel="noopener">Get a-Shell mini</a>. Open it once, then return here.</li>
+<li><a href="https://www.icloud.com/shortcuts/695f53b649c947d998ae058d03efcc43" target="_blank" rel="noopener">Get SW-DLT</a>. Tap <strong>Add Shortcut</strong> and keep its name.</li></ol>
+<button type="button" id="ready">I’ve added the shortcut</button></details>
+<p id="share-tip">Once set up, tap <strong>Share → SW-DLT</strong> on a Reel or Short. Choose video or MP3, then <strong>Save to Files</strong>.</p>
+<details id="install"><summary>Add Pawket to your Home Screen</summary><p>In Safari tap <strong>Share → Add to Home Screen → Add</strong>.</p></details>
+</main><script src="mobile.js?v=2"></script></body></html>

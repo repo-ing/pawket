@@ -7,3 +7,10 @@ input, button { box-sizing: border-box; padding: .85rem 1rem; border-radius: .6r
 input { background: #202025; color: white; border: 1px solid #60606b; width: 100%; }
 button { background: #dedbfa; color: #181720; border: 0; font-weight: 650; cursor: pointer; }
 #error:empty { display: none; }
+form { margin: 1.5rem 0; }
+details { margin: .75rem 0; }
+summary { min-height: 44px; padding-block: .5rem; }
+#setup li { margin-block: .75rem; }
+#ready { width: 100%; }
+#share-tip { margin: 1.25rem 0; }
+input[aria-invalid="true"] { border-color: #f0aaa8; }
