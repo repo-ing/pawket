@@ -352,7 +352,7 @@ impl Engine {
             return Ok((info, format));
         }
         let info = self.inspect(input).await?;
-        let format = info
+        let mut format = info
             .formats
             .iter()
             .find(|f| {
@@ -364,6 +364,9 @@ impl Engine {
             })
             .ok_or(PawketError::FormatUnavailable)?
             .clone();
+        if !original && info.provider != ytdlp::PROVIDER {
+            format.id = "quick-mp3".into();
+        }
         Ok((info, format))
     }
 
@@ -408,6 +411,15 @@ impl Engine {
             return self.inspect_native(source).await;
         };
         if backend.cookies().is_none() {
+            // A media extension is a hint. Let the native fetch confirm the
+            // response before starting the general-purpose extractor.
+            if parse::direct_format(&source, "", None).is_some() {
+                if let Ok(info) = self.inspect_native(source.clone()).await {
+                    if info.provider == "direct_https" {
+                        return Ok(info);
+                    }
+                }
+            }
             if let Some(id) = youtube::video_id(&source) {
                 if let Ok(Some(info)) = tokio::time::timeout(
                     std::time::Duration::from_secs(2),
@@ -580,13 +592,14 @@ impl Engine {
             Some((output, ffmpeg)) => {
                 progress.set_total(None);
                 let kbps = format.bitrate.map(|bits| (bits / 1000) as u32);
-                let (converted, bytes) = convert::run(
+                let (converted, bytes) = convert::run_with_effort(
                     ffmpeg,
                     &temp_path,
                     audio_path.as_deref(),
                     directory,
                     output,
                     kbps,
+                    (format.id == "quick-mp3").then_some(7),
                 )
                 .await?;
                 (converted, output.extension(), bytes)

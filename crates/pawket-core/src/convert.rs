@@ -240,7 +240,8 @@ fn encode_args(conversion: Conversion, kbps: Option<u32>) -> Vec<String> {
     args
 }
 
-pub(crate) async fn run(
+#[cfg(test)]
+async fn run(
     executable: &Path,
     input: &Path,
     separate_audio: Option<&Path>,
