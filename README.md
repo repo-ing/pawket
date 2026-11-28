@@ -15,10 +15,14 @@ Paste a YouTube link and click **Save MP3**. You can save the video as MP4 too.
 | Your computer | Download | Open it |
 | --- | --- | --- |
 | **Windows 10 or 11** (64-bit Intel or AMD) | **[Download for Windows](https://github.com/repo-ing/pawket/releases/latest/download/Pawket-Setup.exe)** | Double-click **Pawket-Setup.exe** and choose **Finish**. Next time, open **Pawket** from Start. |
-| **Mac with an M1 or newer chip** (macOS 14+) | **[Download for Mac](https://github.com/repo-ing/pawket/releases/latest/download/Pawket-for-Mac.zip)** | Open the ZIP, then double-click **Pawket**. |
+| **Mac with an M1 or newer chip** (macOS 14+) | **[Download for Mac](https://github.com/repo-ing/pawket/releases/latest/download/Pawket-for-Mac.zip)** | Unzip the download, move **Pawket.app** to **Applications**, then open it. |
 | **Intel Mac or Linux** | [Other downloads](https://github.com/repo-ing/pawket/releases/latest) | Extract the ZIP and follow **START.md** inside. |
 
 The Windows installer and Apple silicon Mac app include the media tools. Pawket opens in your web browser. On Windows, leave the Pawket window running while you download.
+
+## Update Pawket
+
+Quit Pawket first. On Windows, run the latest **Pawket-Setup.exe**. On an Apple silicon Mac, unzip the latest **Pawket-for-Mac.zip**, drag **Pawket.app** into the same Applications folder as your current copy, and choose **Replace**. Open that copy to use the update. [Latest release and downloads](https://github.com/repo-ing/pawket/releases/latest)
 
 ## Save your first file
 
