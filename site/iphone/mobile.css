@@ -1,0 +1,9 @@
+main { max-width: 38rem; margin: 3rem auto; padding: 0 1.25rem 3rem; }
+h1 { font-size: clamp(2.4rem, 8vw, 4rem); }
+h2 { font-size: 1.3rem; margin-bottom: .5rem; }
+form { display: grid; gap: .75rem; margin-top: 2rem; }
+label { font-weight: 600; }
+input, button { box-sizing: border-box; padding: .85rem 1rem; border-radius: .6rem; font: inherit; }
+input { background: #202025; color: white; border: 1px solid #60606b; width: 100%; }
+button { background: #dedbfa; color: #181720; border: 0; font-weight: 650; cursor: pointer; }
+#error:empty { display: none; }
