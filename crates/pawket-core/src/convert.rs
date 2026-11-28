@@ -7,6 +7,8 @@ use std::{
 use tempfile::TempPath;
 use tokio::{fs::File, process::Command, time::timeout};
 
+mod parallel_mp3;
+
 /// Re-encoding long or high-resolution video to H.264 can take a while.
 const ENCODE_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 /// MP3 bitrates offered, best first. The middle one is the default.
@@ -269,6 +271,17 @@ pub(crate) async fn run_with_effort(
 ) -> Result<(TempPath, u64)> {
     if separate_audio.is_some() && conversion != Conversion::Mp4 {
         return Err(PawketError::FormatUnavailable);
+    }
+    if conversion == Conversion::Mp3 && kbps == Some(128) && mp3_effort == Some(7) {
+        if let Ok(output) = timeout(
+            ENCODE_TIMEOUT,
+            parallel_mp3::run(executable, input, directory),
+        )
+        .await
+        .map_err(|_| PawketError::ConversionFailed)?
+        {
+            return Ok(output);
+        }
     }
     let input = File::open(input).await?.into_std().await;
     let (output, path) = storage::create_temporary(directory).await?;

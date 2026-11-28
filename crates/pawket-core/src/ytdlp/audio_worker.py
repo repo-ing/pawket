@@ -4,6 +4,7 @@ import re
 import sys
 
 from yt_dlp.extractor.common import InfoExtractor
+from yt_dlp.utils import DownloadError
 
 
 class PawketAudioIE(InfoExtractor):
@@ -20,6 +21,8 @@ class PawketAudioIE(InfoExtractor):
                 reply({"written": update.get("downloaded_bytes", 0),
                        "total": update.get("total_bytes")})
 
+        # Initialize the extractor while the worker is idle before its first link.
+        engine.get_info_extractor("Youtube").initialize()
         engine.add_progress_hook(progress)
         for line in sys.stdin:
             request = json.loads(line)
@@ -32,6 +35,11 @@ class PawketAudioIE(InfoExtractor):
                 info = engine.extract_info("https://www.youtube.com/watch?v=" + video_id,
                                            ie_key="Youtube", download=True)
                 reply({"done": bool(info and info.get("requested_downloads"))})
+            except DownloadError as error:
+                # Avoid repeating this same client when it has no usable track.
+                unavailable = any(reason in str(error) for reason in (
+                    "Requested format is not available", "No video formats found", "HTTP Error 403"))
+                reply({"done": False, "unavailable": unavailable})
             except Exception:
                 reply({"done": False})
         return self.playlist_result([])

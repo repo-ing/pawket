@@ -277,7 +277,7 @@ async fn download_with_options(
                 backend
                     .worker
                     .download(backend, &id, &worker_dir.path().canonicalize()?, progress)
-                    .await
+                    .await?
                     && finished_file(worker_dir.path()).await.is_ok()
             }
             None => false,

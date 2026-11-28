@@ -29,6 +29,8 @@ struct Session {
 #[derive(Deserialize)]
 struct Reply {
     done: Option<bool>,
+    #[serde(default)]
+    unavailable: bool,
     written: Option<u64>,
     total: Option<u64>,
 }
@@ -54,7 +56,9 @@ impl Session {
                 "--match-filter",
                 "live_status!=?is_live & live_status!=?is_upcoming",
                 "--extractor-args",
-                "youtube:player_client=tv_samsung;skip=hls,dash",
+                // Public audio jobs use title and live status from the player. Skip
+                // the watch-page recommendations and their separate API fallback.
+                "youtube:player_client=tv_samsung;skip=hls,dash;webpage_skip=initial_data;player_skip=initial_data,configs",
                 "-o",
                 super::OUTPUT_TEMPLATE,
                 "--",
@@ -85,7 +89,11 @@ impl Session {
             let reply: Reply =
                 serde_json::from_str(&line).map_err(|_| PawketError::BackendUnavailable)?;
             if let Some(ok) = reply.done {
-                return Ok(ok);
+                return if reply.unavailable {
+                    Err(PawketError::FormatUnavailable)
+                } else {
+                    Ok(ok)
+                };
             }
             if let Some(written) = reply.written {
                 progress.set_written(written);
@@ -110,10 +118,10 @@ impl AudioWorker {
         id: &str,
         directory: &Path,
         progress: &Progress,
-    ) -> bool {
+    ) -> Result<bool> {
         // A second simultaneous download can use the ordinary subprocess.
         let Ok(mut slot) = self.0.try_lock() else {
-            return false;
+            return Ok(false);
         };
         let mut session = match slot
             .take()
@@ -122,16 +130,16 @@ impl AudioWorker {
             Some(session) => session,
             None => match Session::start(backend).await {
                 Ok(s) => s,
-                Err(_) => return false,
+                Err(_) => return Ok(false),
             },
         };
         // Taking ownership also drops the whole process group on cancellation.
-        if let Ok(Ok(success)) =
+        if let Ok(result @ (Ok(_) | Err(PawketError::FormatUnavailable))) =
             timeout(DOWNLOAD_TIMEOUT, session.download(id, directory, progress)).await
         {
             *slot = Some(session);
-            return success;
+            return result;
         }
-        false
+        Ok(false)
     }
 }
