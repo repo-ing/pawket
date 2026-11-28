@@ -2,9 +2,11 @@
 
 # Pawket
 
-Save a video as **MP4** or just the audio as **MP3**. Paste a link, pick what you want, and save the file to your computer. Pawket runs on your computer and needs no Pawket account.
+**Paste a YouTube link. Click Save MP3. Get the track in your downloads folder.** Pawket also saves video as MP4 and runs on your computer without a Pawket account.
 
-[Official Pawket website and installation guide](https://repo-ing.github.io/pawket/)
+**2.83 seconds from link to finished MP3** was Pawket’s median across 11 YouTube videos and Shorts on a Mac mini. The yt-dlp CLI took 8.65 seconds on the same links in a separate run. [See every timing and the test setup](docs/BENCHMARK.md).
+
+**[Download for Windows](https://github.com/repo-ing/pawket/releases/latest/download/Pawket-Setup.exe)** · **[Download for Apple silicon Mac](https://github.com/repo-ing/pawket/releases/latest/download/Pawket-for-Mac.zip)** · [Intel Mac and Linux](https://github.com/repo-ing/pawket/releases/latest)
 
 ## Download Pawket
 
@@ -18,11 +20,11 @@ The Windows installer and Apple silicon Mac app include the media tools. Pawket 
 
 ## Save your first file
 
-1. Copy the link to a public video, such as a YouTube Short or Instagram Reel.
-2. Paste it into Pawket and click **Find media**.
-3. Choose **Video** for an MP4 or **Audio → MP3** for the soundtrack, then click **Save**.
+1. Copy a public video link and paste it into Pawket.
+2. Click **Save MP3** for audio. For video, click **Find media**, choose **Video**, then **Save**.
+3. Click **Open folder** to find your file.
 
-On desktop, **Save MP3** saves a 128 kbps MP3 in one click. **Save original audio** keeps the source audio track in its existing format when one is available.
+**Save original audio** keeps the source audio track in its existing format when available. [Installation guide](https://repo-ing.github.io/pawket/)
 
 ![Pawket finding a video and saving the selected format](docs/pawket-demo.gif)
 
