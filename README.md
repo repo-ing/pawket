@@ -4,7 +4,7 @@
 
 **put it in ur pawket.**
 
-Found a track you want to keep? Paste the YouTube link and hit **Save MP3**. Now you can play it offline. Want the video too? Save an MP4. No account needed.
+Paste a YouTube link and click **Save MP3**. You can save the video as MP4 too.
 
 **2.83 seconds from link to finished MP3** was Pawket’s median across 11 YouTube videos and Shorts on a Mac mini. The yt-dlp CLI took 8.65 seconds on the same links in a separate run. [See every timing and the test setup](docs/BENCHMARK.md).
 
