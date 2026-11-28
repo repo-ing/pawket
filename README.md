@@ -10,7 +10,7 @@ Paste a YouTube link and click **Save MP3**. You can save the video as MP4 too.
 
 **[Download for Windows](https://github.com/repo-ing/pawket/releases/latest/download/Pawket-Setup.exe)** · **[Download for Apple silicon Mac](https://github.com/repo-ing/pawket/releases/latest/download/Pawket-for-Mac.zip)** · [Intel Mac and Linux](https://github.com/repo-ing/pawket/releases/latest)
 
-[Get Pawket for iPhone](https://repo-ing.github.io/pawket/iphone/) to save direct MP3 and MP4 links with Safari and Files.
+[Get Pawket for iPhone](https://repo-ing.github.io/pawket/iphone/) to save supported video links on the phone using a-Shell mini and the SW-DLT share shortcut.
 
 ## Download Pawket
 

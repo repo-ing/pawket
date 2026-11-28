@@ -4,8 +4,12 @@
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="../pawket-logo-320.png"><link rel="stylesheet" href="../theme.css"><link rel="stylesheet" href="mobile.css"></head>
 <body><nav aria-label="Main"><a class="brand" href="../"><img src="../pawket-logo-320.png" width="32" height="32" alt="">Pawket</a></nav>
 <main><h1>Pawket for iPhone</h1>
-<div id="install"><h2>Add to Home Screen</h2><p>Open this page in Safari. Tap <strong>Share → Add to Home Screen → Add</strong>. If Safari shows <strong>Open as Web App</strong>, leave it on.</p></div>
-<form id="save"><label for="link">MP3 or MP4 link</label><input id="link" type="url" required placeholder="https://example.com/video.mp4" autocapitalize="none" spellcheck="false" inputmode="url"><button>Open media</button><p id="error" role="alert"></p></form>
-<p>Paste a direct file link. When it opens, tap <strong>Share → Save to Files</strong>. If Safari downloads it immediately, look in <strong>Files → Downloads</strong>.</p>
-<p>For YouTube, Instagram, or converting video to MP3, use <a href="../">Pawket for desktop</a>.</p>
+<p>Save a public video or its audio on your iPhone.</p>
+<section aria-labelledby="setup"><h2 id="setup">Set up video downloads</h2>
+<ol><li><a href="https://apps.apple.com/app/id1543537943">Install a-Shell mini</a> and open it once.</li><li><a href="https://www.icloud.com/shortcuts/695f53b649c947d998ae058d03efcc43">Add the SW-DLT shortcut</a>. Keep its name so Pawket can open it.</li></ol>
+<p>In YouTube or Instagram, tap <strong>Share → SW-DLT</strong>. You may need to tap <strong>More</strong> first. Choose video or MP3 audio, then <strong>Save to Files</strong>. The first run sets up the downloader on your phone. Availability depends on the post.</p></section>
+<form id="save"><label for="link">Or paste a link</label><input id="link" type="url" required placeholder="https://…" autocapitalize="none" spellcheck="false" inputmode="url"><button>Open media</button><p id="error" role="alert"></p></form>
+<p>Direct MP3 and MP4 files open in Safari. Other links open in SW-DLT. If Shortcuts can’t find it, use <strong>Add the SW-DLT shortcut</strong> above.</p>
+<div id="install"><details><summary>Add Pawket to your Home Screen</summary><p>In Safari tap <strong>Share → Add to Home Screen → Add</strong>.</p></details></div>
+<p><a href="https://github.com/net00-1/SW-DLT">About the third-party SW-DLT shortcut</a></p>
 </main><script src="mobile.js"></script></body></html>

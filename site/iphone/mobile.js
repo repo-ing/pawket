@@ -13,10 +13,18 @@ form.addEventListener("submit", event => {
     error.textContent = "Paste a full HTTPS link.";
     return;
   }
-  if (url.protocol !== "https:" || url.username || url.password || !/\.(mp3|mp4)$/i.test(url.pathname)) {
-    error.textContent = "Use an HTTPS file link ending in .mp3 or .mp4.";
+  if (url.protocol !== "https:" || url.username || url.password) {
+    error.textContent = "Use a public HTTPS link without embedded credentials.";
     return;
   }
   error.textContent = "";
-  window.location.assign(url.href);
+  if (/\.(mp3|mp4)$/i.test(url.pathname)) {
+    window.location.assign(url.href);
+    return;
+  }
+  const shortcut = new URL("shortcuts://run-shortcut");
+  shortcut.searchParams.set("name", "SW-DLT");
+  shortcut.searchParams.set("input", "text");
+  shortcut.searchParams.set("text", url.href);
+  window.location.assign(shortcut.href);
 });
