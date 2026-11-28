@@ -45,15 +45,104 @@ pub(crate) fn media_url_allowed(url: &Url) -> bool {
 }
 
 pub(crate) async fn inspect(source: &Url, id: &str, can_mux: bool) -> Result<MediaInfo> {
+    let player = fetch_player(id).await?;
+    parse_player(source, id, player, can_mux)
+}
+
+async fn fetch_player(id: &str) -> Result<Player> {
     let mut watch = Url::parse("https://www.youtube.com/watch").expect("constant watch URL");
     watch.query_pairs_mut().append_pair("v", id);
     let (_, response) = network::fetch_scoped(watch, watch_host).await?;
     let bytes = network::read_limited(response, MAX_WATCH_BYTES).await?;
     let page = String::from_utf8_lossy(&bytes);
-    let player = player_response(&page).ok_or_else(|| {
+    player_response(&page).ok_or_else(|| {
         unavailable("The YouTube watch page did not expose its public player response.")
-    })?;
-    parse_player(source, id, player, can_mux)
+    })
+}
+
+/// Read format metadata from the public player. The backend still resolves
+/// the selected stream at save time, using its ordinary format selector.
+pub(crate) async fn inspect_catalog(
+    source: &Url,
+    id: &str,
+    abilities: crate::ytdlp::Abilities,
+) -> Option<MediaInfo> {
+    catalog(source, id, abilities, fetch_player(id).await.ok()?)
+}
+
+fn catalog(
+    source: &Url,
+    id: &str,
+    abilities: crate::ytdlp::Abilities,
+    player: Player,
+) -> Option<MediaInfo> {
+    let details = player.video_details?;
+    let streams = player.streaming_data?;
+    if player.playability_status.status != "OK"
+        || details.video_id != id
+        || details.is_live
+        || !streams.license_infos.is_empty()
+    {
+        return None;
+    }
+    let mut tracks = Vec::new();
+    for (combined, entries) in [(true, streams.formats), (false, streams.adaptive_formats)] {
+        for value in entries.into_iter().take(128) {
+            let Ok(format) = Format::deserialize(value) else {
+                continue;
+            };
+            if !format.drm_families.is_empty() {
+                continue;
+            }
+            let mime = format.mime_type.split(';').next()?;
+            let (kind, extension) = mime.split_once('/')?;
+            let audio = kind == "audio";
+            if !audio && kind != "video" {
+                continue;
+            }
+            tracks.push(crate::ytdlp::Track {
+                height: format.height,
+                has_video: !audio,
+                audio_only: audio,
+                has_audio: Some(audio || combined),
+                h264: format.mime_type.contains("avc1"),
+                extension: Some(
+                    if audio && extension == "mp4" {
+                        "m4a"
+                    } else {
+                        extension
+                    }
+                    .into(),
+                ),
+                size: format.content_length.and_then(|n| n.parse().ok()),
+                audio_rate: format.bitrate.unwrap_or_default() as f64 / 1000.0,
+            });
+        }
+    }
+    if !tracks
+        .iter()
+        .any(|t| t.has_video && (abilities.merge || t.has_audio == Some(true)))
+        || !tracks.iter().any(|t| t.has_audio == Some(true))
+    {
+        return None;
+    }
+    let base = MediaFormat {
+        url: source.to_string(),
+        duration_ms: details
+            .length_seconds?
+            .parse::<u64>()
+            .ok()?
+            .checked_mul(1000),
+        ..Default::default()
+    };
+    let formats = crate::ytdlp::single(&base, &tracks, abilities);
+    Some(MediaInfo {
+        title: details.title?,
+        source_url: source.to_string(),
+        provider: crate::ytdlp::PROVIDER.into(),
+        formats,
+        unsupported: Vec::new(),
+    })
 }
 
 fn unavailable(message: &str) -> PawketError {
@@ -105,6 +194,7 @@ struct Playability {
 #[serde(rename_all = "camelCase")]
 struct Details {
     video_id: String,
+    length_seconds: Option<String>,
     title: Option<String>,
     #[serde(default)]
     is_live: bool,
@@ -386,6 +476,30 @@ mod tests {
         crate::convert::add_formats(&mut info, crate::convert::Encoders::default());
         assert!(info.formats.iter().any(|f| f.id == "youtube-140-as-mp3"));
         assert!(!info.formats.iter().any(|f| f.id == "youtube-137-as-mp3"));
+    }
+
+    #[test]
+    fn catalog_uses_track_metadata_and_defers_stream_resolution() {
+        let source = Url::parse("https://www.youtube.com/watch?v=jNQXAC9IVRw").unwrap();
+        let page = r#"<script>var ytInitialPlayerResponse = {"playabilityStatus":{"status":"OK"},
+            "videoDetails":{"videoId":"jNQXAC9IVRw","title":"Sample","lengthSeconds":"42"},
+            "streamingData":{"adaptiveFormats":[
+                {"itag":137,"mimeType":"video/mp4","height":1080},
+                {"itag":140,"mimeType":"audio/mp4","bitrate":128000}]}};</script>"#;
+        let abilities = crate::ytdlp::Abilities {
+            merge: true,
+            opus: false,
+        };
+        let parse = |html: &str| catalog(&source, ID, abilities, player_response(html).unwrap());
+        let info = parse(page).unwrap();
+        assert!(info.formats.iter().any(|f| f.id == "ytdlp-1080p"));
+        assert!(info
+            .formats
+            .iter()
+            .all(|f| f.url == source.as_str() && f.duration_ms == Some(42000)));
+        assert!(parse(&page.replace("OK", "LOGIN_REQUIRED")).is_none());
+        assert!(parse(&page.replace(ID, "another-id")).is_none());
+        assert!(parse(&page.replace("adaptiveFormats", "unknown")).is_none());
     }
 
     #[tokio::test]

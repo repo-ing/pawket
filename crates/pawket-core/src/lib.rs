@@ -338,6 +338,18 @@ impl Engine {
         let Some(backend) = &self.ytdlp else {
             return self.inspect_native(source).await;
         };
+        if backend.cookies().is_none() {
+            if let Some(id) = youtube::video_id(&source) {
+                if let Ok(Some(info)) = tokio::time::timeout(
+                    std::time::Duration::from_secs(2),
+                    youtube::inspect_catalog(&source, &id, self.abilities()),
+                )
+                .await
+                {
+                    return Ok(info);
+                }
+            }
+        }
         let backend_error = match ytdlp::inspect(backend, &source, self.abilities()).await {
             Ok((info, false)) => return Ok(info),
             // Generic page scans: Pawket's own result keeps exact bytes and

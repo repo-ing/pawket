@@ -13,7 +13,7 @@ mod routes;
 mod select;
 
 pub use cookies::CookieSource;
-pub(crate) use offer::Abilities;
+pub(crate) use offer::{single, Abilities, Track};
 pub(crate) use parse::{MAX_ENTRIES, PROVIDER};
 
 use crate::{
